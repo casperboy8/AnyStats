@@ -15,12 +15,8 @@ jobs:
 
       - name: Build and Restart App
         run: |
-          # Zorg dat de github-gebruiker toegang heeft tot de Node.js omgeving van de server
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          
-          # Als nvm niet wordt gebruikt, proberen we ook het standaard wegeffect voor globale npm/pm2 installaties
-          export PATH=$PATH:/usr/bin:/usr/local/bin:$HOME/.npm-global/bin
+          # Geef het volledige, uitgebreide Linux-systeempad mee aan de runner
+          export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
           
           cd /var/www/anystats
           
@@ -34,5 +30,5 @@ jobs:
           npm install
           npm run build
           
-          # De applicatie herstarten met PM2 zodat de wijzigingen live gaan
+          # De applicatie herstarten met PM2
           pm2 restart anystats || pm2 start npm --name "anystats" -- start
