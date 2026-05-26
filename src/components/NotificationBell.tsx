@@ -53,7 +53,7 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={handleOpen}
-        className="relative p-2 text-amber-100 hover:text-white transition-colors"
+        className="relative p-2 text-gray-400 hover:text-gray-700 transition-colors"
         aria-label="Notificaties"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

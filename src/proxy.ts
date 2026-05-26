@@ -12,10 +12,19 @@ const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapi
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (publicPaths.some(p => pathname.startsWith(p))) return NextResponse.next();
   if (publicApiPaths.some(p => pathname.startsWith(p))) return NextResponse.next();
 
   const token = request.cookies.get('session')?.value;
+
+  if (publicPaths.some(p => pathname.startsWith(p))) {
+    if (token) {
+      try {
+        await jwtVerify(token, JWT_SECRET);
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      } catch { /* expired token, show login */ }
+    }
+    return NextResponse.next();
+  }
 
   if (!token) {
     if (pathname.startsWith('/api/')) {

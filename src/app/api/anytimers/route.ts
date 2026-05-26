@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   createNotification(receiver_id, 'anytimer_request', message, anytimerId);
 
   await sendPushToUser(receiver_id, {
-    title: '🍺 Anytimer verzoek!',
+    title: 'Anytimer verzoek',
     body: message,
     data: { url: '/dashboard', anytimerId },
   });

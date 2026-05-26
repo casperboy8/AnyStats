@@ -21,7 +21,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   createNotification(anytimer.giver_id, 'anytimer_declined', message, anytimer.id);
 
   await sendPushToUser(anytimer.giver_id, {
-    title: '❌ Anytimer afgewezen',
+    title: 'Anytimer afgewezen',
     body: message,
     data: { url: '/dashboard' },
   });

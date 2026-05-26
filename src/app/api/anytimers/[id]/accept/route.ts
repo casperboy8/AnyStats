@@ -22,7 +22,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   createNotification(anytimer.giver_id, 'anytimer_accepted', message, anytimer.id);
 
   await sendPushToUser(anytimer.giver_id, {
-    title: '✅ Anytimer geaccepteerd!',
+    title: 'Anytimer geaccepteerd',
     body: message,
     data: { url: '/dashboard' },
   });

@@ -20,11 +20,11 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   ).run('inzetten_pending', id);
 
   const receiver = db.prepare('SELECT username FROM users WHERE id = ?').get(anytimer.receiver_id) as { username: string };
-  const message = `${session.username} zet een anytimer op jou in! Pak een biertje. 🍺`;
+  const message = `${session.username} zet een anytimer op jou in.`;
   createNotification(anytimer.receiver_id, 'anytimer_ingezet', message, anytimer.id);
 
   await sendPushToUser(anytimer.receiver_id, {
-    title: '🍺 ANYTIMER INGEZET!',
+    title: 'Anytimer ingezet',
     body: message,
     data: { url: '/dashboard', anytimerId: anytimer.id },
   });

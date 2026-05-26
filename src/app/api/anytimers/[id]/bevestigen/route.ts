@@ -22,29 +22,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       'UPDATE anytimers SET status = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?'
     ).run('completed', id);
 
-    const message = `Anytimer gedronken! Goed gedaan. 🍻`;
+    const message = `Anytimer voltooid.`;
     createNotification(anytimer.receiver_id, 'anytimer_completed', message, anytimer.id);
     await sendPushToUser(anytimer.receiver_id, {
-      title: '✅ Anytimer voltooid',
+      title: 'Anytimer voltooid',
       body: message,
       data: { url: '/dashboard' },
     });
   } else {
-    // Geweigerd: zet anytimer terug op actief + voeg straf-anytimer toe
     db.prepare('UPDATE anytimers SET status = ? WHERE id = ?').run('active', id);
 
     const penaltyResult = db.prepare(
       'INSERT INTO anytimers (giver_id, receiver_id, reason, status) VALUES (?, ?, ?, ?)'
-    ).run(session.id, anytimer.receiver_id, `Straf: geweigerde anytimer (${anytimer.reason})`, 'active');
+    ).run(session.id, anytimer.receiver_id, `Straf: geweigerd (${anytimer.reason})`, 'active');
 
     const receiverUser = db.prepare('SELECT username FROM users WHERE id = ?').get(anytimer.receiver_id) as { username: string };
-    const message = `${receiverUser.username} heeft geweigerd! Originele anytimer blijft + 1 straf-anytimer erbij. 😤`;
+    const message = `${receiverUser.username} heeft geweigerd. Anytimer blijft actief + 1 extra.`;
     createNotification(session.id, 'anytimer_refused', message, anytimer.id);
 
-    const receiverMsg = `Je hebt een anytimer geweigerd. Je krijgt een extra straf-anytimer!`;
+    const receiverMsg = `Je hebt geweigerd. Je krijgt een extra anytimer.`;
     createNotification(anytimer.receiver_id, 'anytimer_refused_penalty', receiverMsg, penaltyResult.lastInsertRowid as number);
     await sendPushToUser(anytimer.receiver_id, {
-      title: '😤 Straf-anytimer!',
+      title: 'Extra anytimer',
       body: receiverMsg,
       data: { url: '/dashboard' },
     });

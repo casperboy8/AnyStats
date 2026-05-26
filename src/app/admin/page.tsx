@@ -48,15 +48,13 @@ export default function AdminPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Link href="/admin/users" className="block bg-white rounded-2xl border border-gray-100 p-6 hover:border-amber-300 hover:shadow-md transition-all group">
-          <div className="text-3xl mb-3">👥</div>
-          <h2 className="text-lg font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">Gebruikers</h2>
-          <p className="text-gray-500 text-sm mt-1">Beheer accounts, rol wijzigen, verwijderen</p>
+        <Link href="/admin/users" className="block bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-300 transition-colors group">
+          <h2 className="text-sm font-semibold text-gray-900 mb-1">Gebruikers</h2>
+          <p className="text-gray-400 text-sm">Accounts, rollen, verwijderen</p>
         </Link>
-        <Link href="/admin/anytimers" className="block bg-white rounded-2xl border border-gray-100 p-6 hover:border-amber-300 hover:shadow-md transition-all group">
-          <div className="text-3xl mb-3">🍺</div>
-          <h2 className="text-lg font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">Anytimers</h2>
-          <p className="text-gray-500 text-sm mt-1">Handmatig aanmaken, status aanpassen, verwijderen</p>
+        <Link href="/admin/anytimers" className="block bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-300 transition-colors group">
+          <h2 className="text-sm font-semibold text-gray-900 mb-1">Anytimers</h2>
+          <p className="text-gray-400 text-sm">Aanmaken, status, verwijderen</p>
         </Link>
       </div>
     </div>

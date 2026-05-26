@@ -21,39 +21,39 @@ export default function Navbar({ user }: Props) {
   if (!user) return null;
 
   return (
-    <nav className="bg-amber-700 shadow-lg">
-      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-white font-bold text-lg tracking-tight">
-            🍺 Anytimer
+    <nav className="bg-white border-b border-gray-100">
+      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-12">
+        <div className="flex items-center gap-5">
+          <Link href="/dashboard" className="font-semibold text-gray-900 text-sm tracking-tight">
+            Anytimer
           </Link>
           <Link
             href="/dashboard"
-            className={`text-sm font-medium transition-colors ${pathname === '/dashboard' ? 'text-white' : 'text-amber-200 hover:text-white'}`}
+            className={`text-sm transition-colors ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`}
           >
             Dashboard
           </Link>
           <Link
             href="/leaderboard"
-            className={`text-sm font-medium transition-colors ${pathname === '/leaderboard' ? 'text-white' : 'text-amber-200 hover:text-white'}`}
+            className={`text-sm transition-colors ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`}
           >
             Klassement
           </Link>
           {user.role === 'admin' && (
             <Link
               href="/admin"
-              className={`text-sm font-medium transition-colors ${pathname.startsWith('/admin') ? 'text-white' : 'text-amber-200 hover:text-white'}`}
+              className={`text-sm transition-colors ${pathname.startsWith('/admin') ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`}
             >
               Admin
             </Link>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <NotificationBell />
-          <span className="text-amber-200 text-sm">{user.username}</span>
+          <span className="text-gray-400 text-xs">{user.username}</span>
           <button
             onClick={logout}
-            className="text-xs text-amber-300 hover:text-white transition-colors px-2 py-1 rounded hover:bg-amber-600"
+            className="text-xs text-gray-400 hover:text-gray-700 transition-colors px-2 py-1 rounded hover:bg-gray-100"
           >
             Uitloggen
           </button>
