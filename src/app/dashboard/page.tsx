@@ -138,7 +138,7 @@ export default function DashboardPage() {
         {/* Op mij */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-gray-900">Op mij!!!</h2>
+            <h2 className="text-sm font-medium text-gray-900">Op mij</h2>
             <span className="text-xs text-gray-400">{opMij.length}</span>
           </div>
 
