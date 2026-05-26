@@ -7,7 +7,6 @@ on:
 
 jobs:
   deploy:
-    # Dit zorgt ervoor dat hij direct op jouw ubuntu server activeert
     runs-on: self-hosted
 
     steps:
@@ -16,17 +15,24 @@ jobs:
 
       - name: Build and Restart App
         run: |
+          # Zorg dat de github-gebruiker toegang heeft tot de Node.js omgeving van de server
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          
+          # Als nvm niet wordt gebruikt, proberen we ook het standaard wegeffect voor globale npm/pm2 installaties
+          export PATH=$PATH:/usr/bin:/usr/local/bin:$HOME/.npm-global/bin
+          
           cd /var/www/anystats
           
-          # Lokale wijzigingen terugdraaien om git conflicten te voorkomen
+          # Lokale wijzigingen resetten om git-conflicten te voorkomen
           git reset --hard HEAD
           
-          # De nieuwste commits ophalen
+          # De nieuwste commits ophalen van GitHub
           git pull origin main
           
-          # Next.js dependencies installeren en builden
+          # Node.js dependencies installeren en de applicatie bouwen
           npm install
           npm run build
           
-          # Je applicatie herstarten met PM2
+          # De applicatie herstarten met PM2 zodat de wijzigingen live gaan
           pm2 restart anystats || pm2 start npm --name "anystats" -- start
