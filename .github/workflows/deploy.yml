@@ -19,3 +19,4 @@ jobs:
           npm run build
           
           pm2 restart anystats || pm2 start npm --name "anystats" -- start
+
