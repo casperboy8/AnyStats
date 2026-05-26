@@ -25,7 +25,8 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     activated_at DATETIME,
-    resolved_at DATETIME
+    resolved_at DATETIME,
+    proof_url TEXT
   );
 
   CREATE TABLE IF NOT EXISTS notifications (
@@ -38,6 +39,12 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
+
+try {
+  db.exec('ALTER TABLE anytimers ADD COLUMN proof_url TEXT');
+} catch {
+  // kolom bestaat al
+}
 
 export type User = {
   id: number;
@@ -58,6 +65,7 @@ export type Anytimer = {
   created_at: string;
   activated_at: string | null;
   resolved_at: string | null;
+  proof_url: string | null;
 };
 
 export type Notification = {
