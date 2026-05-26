@@ -13,7 +13,7 @@ jobs:
           
           cd /var/www/anystats
           git reset --hard HEAD
-          git pull origin main
+          git pull origin main --rebase
           
           npm install
           npm run build
