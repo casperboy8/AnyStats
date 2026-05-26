@@ -1,34 +1,21 @@
 name: Remote Deploy
-
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     runs-on: self-hosted
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Build and Restart App
         run: |
-          # Zorg dat alle commando's (inclusief git, npm en pm2) gevonden worden
           export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
           
           cd /var/www/anystats
-          
-          # Lokale wijzigingen resetten om conflicten te voorkomen
           git reset --hard HEAD
-          
-          # De allernieuwste code direct binnenhalen via Git
           git pull origin main
           
-          # Dependencies installeren en Next.js applicatie bouwen
           npm install
           npm run build
           
-          # De applicatie herstarten met PM2 zodat de wijzigingen live staan
           pm2 restart anystats || pm2 start npm --name "anystats" -- start
