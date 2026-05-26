@@ -30,8 +30,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <p className="text-9xl font-black text-gray-900 mb-8">test</p>
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+<h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
       <p className="text-gray-500 text-sm mb-8">Beheer gebruikers en anytimers</p>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
