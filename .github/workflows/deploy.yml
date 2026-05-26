@@ -15,20 +15,19 @@ jobs:
 
       - name: Build and Restart App
         run: |
-          # Geef het volledige, uitgebreide Linux-systeempad mee aan de runner
-          export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+          # Zorg dat de basisomgeving bekend is voor npm en pm2
+          export PATH=$PATH:/usr/bin:/usr/local/bin
           
+          # 1. Kopieer de zojuist gedownloade code van de runner naar de werkmap
+          # We gebruiken 'cp' in plaats van git pull om git-fouten te omzeilen
+          cp -r /home/actions-runner/_work/AnyStats/AnyStats/. /var/www/anystats/
+          
+          # 2. Ga naar de webmap
           cd /var/www/anystats
           
-          # Lokale wijzigingen resetten om git-conflicten te voorkomen
-          git reset --hard HEAD
-          
-          # De nieuwste commits ophalen van GitHub
-          git pull origin main
-          
-          # Node.js dependencies installeren en de applicatie bouwen
+          # 3. Installeer dependencies en bouw de Next.js applicatie
           npm install
           npm run build
           
-          # De applicatie herstarten met PM2
+          # 4. Herstart de app met PM2
           pm2 restart anystats || pm2 start npm --name "anystats" -- start
