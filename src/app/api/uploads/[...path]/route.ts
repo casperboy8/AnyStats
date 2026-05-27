@@ -29,7 +29,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
 
   const ext = filename.split('.').pop()?.toLowerCase() ?? '';
   const contentType = MIME[ext] ?? 'application/octet-stream';
-  const blob = new Blob([data], { type: contentType });
+  const blob = new Blob([new Uint8Array(data)], { type: contentType });
 
   return new NextResponse(blob, {
     headers: { 'Cache-Control': 'private, max-age=3600' },
