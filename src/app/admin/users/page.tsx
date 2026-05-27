@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
                 className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
               >
                 <option value="user">Gebruiker</option>
-                <option value="admin">Admin</option>
+                <option value="admin">Super Admin</option>
               </select>
             </div>
             <div className="flex justify-end">
@@ -125,7 +125,7 @@ export default function AdminUsersPage() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
               <option value="user">Gebruiker</option>
-              <option value="admin">Admin</option>
+              <option value="admin">Super Admin</option>
             </select>
           </div>
           {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">{error}</div>}

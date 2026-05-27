@@ -56,6 +56,10 @@ export default function AdminPage() {
           <h2 className="text-sm font-semibold text-gray-900 mb-1">Anytimers</h2>
           <p className="text-gray-400 text-sm">Aanmaken, status, verwijderen</p>
         </Link>
+        <Link href="/admin/organisations" className="block bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-300 transition-colors group">
+          <h2 className="text-sm font-semibold text-gray-900 mb-1">Groepen</h2>
+          <p className="text-gray-400 text-sm">Aanmaken, beheren, verwijderen</p>
+        </Link>
         <Link href="/admin/whatsapp" className="block bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-300 transition-colors group">
           <h2 className="text-sm font-semibold text-gray-900 mb-1">📱 WhatsApp</h2>
           <p className="text-gray-400 text-sm">Verbinding, QR-code, testbericht</p>

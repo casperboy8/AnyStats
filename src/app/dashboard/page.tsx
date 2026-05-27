@@ -12,7 +12,10 @@ export default async function DashboardPage() {
 
   const orgs = getUserOrgs(session.id);
 
-  if (orgs.length === 0) redirect('/no-organisation');
+  if (orgs.length === 0) {
+    if (session.role === 'admin') redirect('/admin');
+    redirect('/no-organisation');
+  }
   if (orgs.length === 1) redirect(`/org/${orgs[0].slug}`);
 
   // Meerdere orgs: stuur naar select-org kiezer

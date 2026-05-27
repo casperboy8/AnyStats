@@ -31,10 +31,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       COUNT(CASE WHEN a.receiver_id = u.id AND a.status = 'completed' THEN 1 END) AS ontvangen_totaal
     FROM users u
     JOIN organisation_members om ON om.user_id = u.id AND om.organisation_id = ?
-    LEFT JOIN anytimers a ON (a.giver_id = u.id OR a.receiver_id = u.id)
+    LEFT JOIN anytimers a ON (a.giver_id = u.id OR a.receiver_id = u.id) AND a.organisation_id = ?
     GROUP BY u.id
     ORDER BY ontvangen_actief DESC, ontvangen_totaal DESC
-  `).all(org.id);
+  `).all(org.id, org.id);
 
   return NextResponse.json(stats);
 }
