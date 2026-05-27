@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { sendPushToUser, createNotification } from '@/lib/push';
+import { notifyAnyReceived } from '@/lib/whatsapp/notifications';
 
 export async function GET() {
   const session = await getSession();
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
 
-  const { receiver_id, reason } = await req.json();
+  const { receiver_id, reason, organisation_id } = await req.json();
 
   if (!receiver_id || !reason?.trim()) {
     return NextResponse.json({ error: 'Ontvanger en reden verplicht' }, { status: 400 });
@@ -39,8 +40,8 @@ export async function POST(req: NextRequest) {
   if (!receiver) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });
 
   const result = db.prepare(
-    'INSERT INTO anytimers (giver_id, receiver_id, reason, status) VALUES (?, ?, ?, ?)'
-  ).run(session.id, receiver_id, reason.trim(), 'pending');
+    'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id) VALUES (?, ?, ?, ?, ?)'
+  ).run(session.id, receiver_id, reason.trim(), 'pending', organisation_id ?? null);
 
   const anytimerId = result.lastInsertRowid as number;
 
@@ -52,6 +53,14 @@ export async function POST(req: NextRequest) {
     body: message,
     data: { url: '/dashboard', anytimerId },
   });
+
+  // WhatsApp-notificatie — fire-and-forget, breekt nooit de response
+  let orgName = 'AnyStats';
+  if (organisation_id) {
+    const org = db.prepare('SELECT name FROM organisations WHERE id = ?').get(organisation_id) as { name: string } | undefined;
+    if (org) orgName = org.name;
+  }
+  notifyAnyReceived(receiver_id, session.username, reason.trim(), orgName).catch(() => {});
 
   return NextResponse.json({ ok: true, id: anytimerId });
 }

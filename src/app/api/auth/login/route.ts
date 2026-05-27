@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { createSession } from '@/lib/auth';
+import { getUserOrgs } from '@/lib/org';
 import type { User } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
@@ -19,5 +20,19 @@ export async function POST(req: NextRequest) {
 
   await createSession({ id: user.id, username: user.username, email: user.email, role: user.role });
 
-  return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
+  // Bepaal redirect op basis van org-lidmaatschappen
+  const orgs = getUserOrgs(user.id);
+  let redirect: string;
+
+  if (orgs.length === 0) {
+    redirect = '/no-organisation';
+  } else if (orgs.length === 1) {
+    redirect = `/org/${orgs[0].slug}`;
+  } else if (orgs.some(o => o.role === 'owner')) {
+    redirect = '/organisations';
+  } else {
+    redirect = '/select-org';
+  }
+
+  return NextResponse.json({ ok: true, redirect });
 }

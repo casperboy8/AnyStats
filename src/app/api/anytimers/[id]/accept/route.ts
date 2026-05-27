@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { sendPushToUser, createNotification } from '@/lib/push';
+import { notifyAnyAccepted } from '@/lib/whatsapp/notifications';
 import type { Anytimer } from '@/lib/db';
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -17,7 +18,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   db.prepare('UPDATE anytimers SET status = ? WHERE id = ?').run('active', id);
 
-  const giver = db.prepare('SELECT username FROM users WHERE id = ?').get(anytimer.giver_id) as { username: string };
   const message = `${session.username} heeft jouw anytimer verzoek geaccepteerd!`;
   createNotification(anytimer.giver_id, 'anytimer_accepted', message, anytimer.id);
 
@@ -27,6 +27,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     data: { url: '/dashboard' },
   });
 
-  void giver;
+  // WhatsApp — fire-and-forget
+  notifyAnyAccepted(anytimer.giver_id, session.username, anytimer.reason).catch(() => {});
+
   return NextResponse.json({ ok: true });
 }

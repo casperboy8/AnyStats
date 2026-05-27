@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
-import type { Anytimer } from '@/lib/db';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { writeProof } from '@/lib/storage';
 import { randomUUID } from 'crypto';
+import type { Anytimer } from '@/lib/db';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), 'uploads');
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'];
+const ALLOWED_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'video/mp4': 'mp4',
+  'video/quicktime': 'mov',
+  'video/webm': 'webm',
+};
 const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -19,22 +25,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (!anytimer) return NextResponse.json({ error: 'Anytimer niet gevonden' }, { status: 404 });
   if (anytimer.receiver_id !== session.id) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
-  if (anytimer.status !== 'inzetten_pending') return NextResponse.json({ error: 'Bewijs kan alleen geüpload worden als de any inzetten is' }, { status: 400 });
+  if (anytimer.status !== 'inzetten_pending') {
+    return NextResponse.json({ error: 'Bewijs kan alleen geüpload worden als de any ingezet is' }, { status: 400 });
+  }
 
   const formData = await req.formData();
   const file = formData.get('file') as File | null;
-
   if (!file) return NextResponse.json({ error: 'Geen bestand meegestuurd' }, { status: 400 });
-  if (!ALLOWED_TYPES.includes(file.type)) return NextResponse.json({ error: 'Alleen afbeeldingen en video\'s toegestaan' }, { status: 400 });
-  if (file.size > MAX_SIZE) return NextResponse.json({ error: 'Bestand te groot (max 100 MB)' }, { status: 400 });
 
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin';
+  const ext = ALLOWED_TYPES[file.type];
+  if (!ext) {
+    return NextResponse.json({ error: 'Alleen afbeeldingen en video\'s toegestaan' }, { status: 400 });
+  }
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Bestand te groot (max 100 MB)' }, { status: 400 });
+  }
+
   const filename = `${randomUUID()}.${ext}`;
-  const dest = path.join(UPLOAD_DIR, filename);
-
-  await mkdir(UPLOAD_DIR, { recursive: true });
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(dest, buffer);
+
+  try {
+    await writeProof(filename, buffer);
+  } catch (err) {
+    console.error('[upload] Opslaan mislukt:', err);
+    return NextResponse.json({ error: 'Opslaan mislukt — probeer opnieuw' }, { status: 500 });
+  }
 
   const proofUrl = `/api/uploads/${filename}`;
   db.prepare('UPDATE anytimers SET proof_url = ? WHERE id = ?').run(proofUrl, id);

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { readFile } from 'fs/promises';
+import { readProof } from '@/lib/storage';
 import path from 'path';
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), 'uploads');
 
 const MIME: Record<string, string> = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
@@ -16,22 +14,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
 
   const { path: segments } = await params;
-  // Prevent path traversal
+  // Path traversal preventie
   const filename = path.basename(segments.join('/'));
-  const filePath = path.join(UPLOAD_DIR, filename);
 
   let data: Buffer;
   try {
-    data = await readFile(filePath);
+    data = await readProof(filename);
   } catch {
     return NextResponse.json({ error: 'Bestand niet gevonden' }, { status: 404 });
   }
 
   const ext = filename.split('.').pop()?.toLowerCase() ?? '';
   const contentType = MIME[ext] ?? 'application/octet-stream';
-  const blob = new Blob([new Uint8Array(data)], { type: contentType });
 
-  return new NextResponse(blob, {
-    headers: { 'Cache-Control': 'private, max-age=3600' },
+  return new NextResponse(new Uint8Array(data), {
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'private, max-age=3600',
+    },
   });
 }

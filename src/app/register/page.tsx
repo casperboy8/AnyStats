@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', phone_number: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -79,6 +79,24 @@ export default function RegisterPage() {
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
                 placeholder="Minimaal 6 tekens"
               />
+            </div>
+
+            {/* Telefoonnummer — optioneel */}
+            <div>
+              <label className="block text-sm text-gray-600 mb-1.5">
+                Telefoonnummer <span className="text-gray-400">(optioneel)</span>
+              </label>
+              <input
+                type="tel"
+                value={form.phone_number}
+                onChange={e => update('phone_number', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                placeholder="+31612345678"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Voor WhatsApp-notificaties. Gebruik internationaal formaat, bijv.{' '}
+                <span className="font-mono">+31612345678</span>.
+              </p>
             </div>
 
             {error && <p className="text-red-500 text-sm">{error}</p>}

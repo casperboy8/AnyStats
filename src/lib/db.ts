@@ -40,10 +40,51 @@ db.exec(`
   );
 `);
 
-try {
-  db.exec('ALTER TABLE anytimers ADD COLUMN proof_url TEXT');
-} catch {
-  // kolom bestaat al
+// Org tabellen
+db.exec(`
+  CREATE TABLE IF NOT EXISTS organisations (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    slug        TEXT NOT NULL UNIQUE,
+    description TEXT,
+    logo_url    TEXT,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS organisation_members (
+    id              TEXT PRIMARY KEY,
+    organisation_id TEXT NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role            TEXT NOT NULL CHECK(role IN ('owner', 'admin', 'member')) DEFAULT 'member',
+    joined_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(organisation_id, user_id)
+  );
+`);
+
+// Videos tabel
+db.exec(`
+  CREATE TABLE IF NOT EXISTS videos (
+    id              TEXT PRIMARY KEY,
+    organisation_id TEXT NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+    uploaded_by     INTEGER NOT NULL REFERENCES users(id),
+    filename        TEXT NOT NULL,
+    storage_path    TEXT NOT NULL,
+    file_size_bytes INTEGER,
+    duration_seconds INTEGER,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+// Kolom migraties (veilig: catch als kolom al bestaat)
+for (const sql of [
+  'ALTER TABLE anytimers ADD COLUMN proof_url TEXT',
+  'ALTER TABLE anytimers ADD COLUMN organisation_id TEXT REFERENCES organisations(id)',
+  // WhatsApp-velden op gebruikers
+  'ALTER TABLE users ADD COLUMN phone_number TEXT',
+  'ALTER TABLE users ADD COLUMN phone_verified INTEGER DEFAULT 0',
+  'ALTER TABLE users ADD COLUMN whatsapp_notifications INTEGER DEFAULT 1',
+]) {
+  try { db.exec(sql); } catch { /* bestaat al */ }
 }
 
 export type User = {
@@ -53,6 +94,9 @@ export type User = {
   password_hash: string;
   role: string;
   push_subscription: string | null;
+  phone_number: string | null;
+  phone_verified: number;           // 0 = nee, 1 = ja
+  whatsapp_notifications: number;   // 0 = uit, 1 = aan
   created_at: string;
 };
 
@@ -66,6 +110,34 @@ export type Anytimer = {
   activated_at: string | null;
   resolved_at: string | null;
   proof_url: string | null;
+};
+
+export type Organisation = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logo_url: string | null;
+  created_at: string;
+};
+
+export type OrganisationMember = {
+  id: string;
+  organisation_id: string;
+  user_id: number;
+  role: 'owner' | 'admin' | 'member';
+  joined_at: string;
+};
+
+export type Video = {
+  id: string;
+  organisation_id: string;
+  uploaded_by: number;
+  filename: string;
+  storage_path: string;
+  file_size_bytes: number | null;
+  duration_seconds: number | null;
+  created_at: string;
 };
 
 export type Notification = {

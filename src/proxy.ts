@@ -6,7 +6,7 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-secret-change-in-production'
 );
 
-const publicPaths = ['/login', '/register'];
+const publicPaths = ['/login', '/register', '/no-organisation'];
 const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapid-public-key'];
 
 export async function proxy(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
     if (token) {
       try {
         await jwtVerify(token, JWT_SECRET);
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+        return NextResponse.redirect(new URL('/select-org', request.url));
       } catch { /* expired token, show login */ }
     }
     return NextResponse.next();
@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest) {
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
     if (pathname.startsWith('/admin') && payload.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/select-org', request.url));
     }
     if (pathname.startsWith('/api/admin') && payload.role !== 'admin') {
       return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
