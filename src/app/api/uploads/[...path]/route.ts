@@ -3,7 +3,7 @@ import { getSession } from '@/lib/auth';
 import { readFile } from 'fs/promises';
 import path from 'path';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), 'uploads');
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), 'uploads');
 
 const MIME: Record<string, string> = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
@@ -20,9 +20,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
   const filename = path.basename(segments.join('/'));
   const filePath = path.join(UPLOAD_DIR, filename);
 
-  let data: Buffer;
+  let data: Uint8Array;
   try {
-    data = await readFile(filePath);
+    data = new Uint8Array(await readFile(filePath));
   } catch {
     return NextResponse.json({ error: 'Bestand niet gevonden' }, { status: 404 });
   }
