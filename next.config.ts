@@ -7,7 +7,6 @@ const nextConfig: NextConfig = {
     'whatsapp-web.js',
     'puppeteer',
     'puppeteer-core',
-    '@marsaud/smb2',
     'better-sqlite3',
   ],
 };

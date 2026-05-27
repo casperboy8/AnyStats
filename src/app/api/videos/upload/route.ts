@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { getOrgMembership } from '@/lib/org';
-import { smbWriteFile, smbMkdir } from '@/lib/smb';
+import { mkdir, writeFile } from 'fs/promises';
+import path from 'path';
 import type { Organisation } from '@/lib/db';
 import { randomUUID } from 'crypto';
 
@@ -16,6 +17,10 @@ const ALLOWED_TYPES: Record<string, string> = {
 
 const MAX_BYTES = 500 * 1024 * 1024; // 500 MB
 
+function uploadDir(): string {
+  return process.env.UPLOAD_DIR ?? path.join(process.cwd(), 'uploads');
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
@@ -25,7 +30,7 @@ export async function POST(req: NextRequest) {
   if (!orgSlug) return NextResponse.json({ error: 'org parameter ontbreekt' }, { status: 400 });
 
   const org = db.prepare('SELECT * FROM organisations WHERE slug = ?').get(orgSlug) as Organisation | undefined;
-  if (!org) return NextResponse.json({ error: 'Organisatie niet gevonden' }, { status: 404 });
+  if (!org) return NextResponse.json({ error: 'Groep niet gevonden' }, { status: 404 });
 
   const membership = getOrgMembership(org.id, session.id);
   if (!membership) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
@@ -50,32 +55,35 @@ export async function POST(req: NextRequest) {
   const timestamp = Date.now();
   const safeOriginal = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
   const storedFilename = `${timestamp}-${safeOriginal}`;
-  // Map-structuur op de share: <orgId>/<userId>/
-  const remoteDir = `${org.id}\\${session.id}`;
-  const remotePath = `${remoteDir}\\${storedFilename}`;
+
+  // Map-structuur: <orgId>/<userId>/<filename>
+  const relativeDir = path.join(String(org.id), String(session.id));
+  const relativePath = path.join(relativeDir, storedFilename);
+  const absoluteDir = path.join(uploadDir(), relativeDir);
+  const absolutePath = path.join(uploadDir(), relativePath);
 
   // Zorg dat de map bestaat
   try {
-    await smbMkdir(remoteDir);
+    await mkdir(absoluteDir, { recursive: true });
   } catch (err) {
-    console.error('[SMB] mkdir error:', err);
-    return NextResponse.json({ error: 'Kon map niet aanmaken op de netwerkschijf' }, { status: 500 });
+    console.error('[Video] mkdir error:', err);
+    return NextResponse.json({ error: 'Kon map niet aanmaken' }, { status: 500 });
   }
 
-  // Schrijf het bestand naar de SMB-share
+  // Schrijf het bestand
   try {
     const arrayBuffer = await file.arrayBuffer();
-    await smbWriteFile(remotePath, Buffer.from(arrayBuffer));
+    await writeFile(absolutePath, Buffer.from(arrayBuffer));
   } catch (err) {
-    console.error('[SMB] writeFile error:', err);
+    console.error('[Video] writeFile error:', err);
     return NextResponse.json({ error: 'Bestand opslaan mislukt' }, { status: 500 });
   }
 
-  // Sla de metadata op in de database
+  // Sla de metadata op in de database (relativePath als storage_path)
   db.prepare(`
     INSERT INTO videos (id, organisation_id, uploaded_by, filename, storage_path, file_size_bytes)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(videoId, org.id, session.id, file.name, remotePath, file.size);
+  `).run(videoId, org.id, session.id, file.name, relativePath, file.size);
 
   return NextResponse.json({ ok: true, id: videoId });
 }
