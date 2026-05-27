@@ -11,7 +11,10 @@ export const metadata: Metadata = {
   title: "AnyStats",
   description: "De Anytimer Tracker",
   icons: {
-    icon: [{ url: '/anystats-icon.svg', type: 'image/svg+xml' }],
+    icon: [
+      { url: '/anystats-icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' },
+    ],
   },
 };
 

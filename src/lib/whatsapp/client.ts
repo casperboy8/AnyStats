@@ -66,7 +66,8 @@ function findChromePath(): string | undefined {
     for (const build of builds.sort().reverse()) {
       const candidates = [
         path.join(puppeteerCacheDir, build, 'chrome-win64', 'chrome.exe'),
-        path.join(puppeteerCacheDir, build, 'chrome-linux', 'chrome'),
+        path.join(puppeteerCacheDir, build, 'chrome-linux64', 'chrome'),  // nieuwere Puppeteer versies
+        path.join(puppeteerCacheDir, build, 'chrome-linux', 'chrome'),    // oudere Puppeteer versies
         path.join(puppeteerCacheDir, build, 'chrome-mac', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
       ];
       for (const c of candidates) {

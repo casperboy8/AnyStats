@@ -44,3 +44,6 @@ next-env.d.ts
 whatsapp-session/
 .wwebjs_auth/
 .wwebjs_cache/
+
+# Upload bestanden (bewijs-foto's en video's, lokale opslag)
+/uploads/

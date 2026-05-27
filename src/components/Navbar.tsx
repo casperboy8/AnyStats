@@ -161,11 +161,14 @@ export default function Navbar({ user, orgs }: Props) {
           {/* Logo */}
           <Link
             href={currentSlug ? `/org/${currentSlug}` : '/dashboard'}
-            className="flex items-center shrink-0"
+            className="flex items-center gap-2 shrink-0"
             title="AnyStats"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/anystats-logo.svg" alt="AnyStats" className="h-7 w-auto" />
+            <img src="/anystats-icon.svg" alt="" className="h-8 w-8 rounded-md" />
+            <span className="font-bold text-base tracking-tight text-[#1D3557] leading-none">
+              Any<span className="text-[#3AACB8]">Stats</span>
+            </span>
           </Link>
 
           {/* Org-switcher — desktop */}
