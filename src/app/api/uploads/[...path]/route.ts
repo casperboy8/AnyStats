@@ -20,17 +20,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
   const filename = path.basename(segments.join('/'));
   const filePath = path.join(UPLOAD_DIR, filename);
 
-  let data: Uint8Array;
+  let data: Buffer;
   try {
-    data = new Uint8Array(await readFile(filePath));
+    data = await readFile(filePath);
   } catch {
     return NextResponse.json({ error: 'Bestand niet gevonden' }, { status: 404 });
   }
 
   const ext = filename.split('.').pop()?.toLowerCase() ?? '';
   const contentType = MIME[ext] ?? 'application/octet-stream';
+  const blob = new Blob([data], { type: contentType });
 
-  return new NextResponse(data, {
-    headers: { 'Content-Type': contentType, 'Cache-Control': 'private, max-age=3600' },
+  return new NextResponse(blob, {
+    headers: { 'Cache-Control': 'private, max-age=3600' },
   });
 }
