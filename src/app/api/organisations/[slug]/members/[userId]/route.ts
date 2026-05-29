@@ -13,11 +13,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
   const org = db.prepare('SELECT * FROM organisations WHERE slug = ?').get(slug) as Organisation | undefined;
   if (!org) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 });
 
+  const isSuperAdmin = session.role === 'admin';
   const myMembership = getOrgMembership(org.id, session.id);
-  if (!myMembership) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
+  if (!myMembership && !isSuperAdmin) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
-  // Alleen owner mag rollen wijzigen
-  if (!canChangeRole(myMembership)) {
+  // Alleen owner of super admin mag rollen wijzigen
+  if (!isSuperAdmin && (!myMembership || !canChangeRole(myMembership))) {
     return NextResponse.json({ error: 'Alleen owners mogen rollen wijzigen' }, { status: 403 });
   }
 
@@ -55,15 +56,15 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const org = db.prepare('SELECT * FROM organisations WHERE slug = ?').get(slug) as Organisation | undefined;
   if (!org) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 });
 
+  const isSuperAdminDel = session.role === 'admin';
   const myMembership = getOrgMembership(org.id, session.id);
-  if (!myMembership) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
+  if (!myMembership && !isSuperAdminDel) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
   const targetMembership = getOrgMembership(org.id, targetId) as OrganisationMember | undefined;
   if (!targetMembership) return NextResponse.json({ error: 'Lid niet gevonden' }, { status: 404 });
 
-  // Jezelf mag je altijd verwijderen (verlaten), tenzij je de laatste owner bent
   const isSelf = session.id === targetId;
-  if (!isSelf && !canRemoveMember(myMembership, targetMembership)) {
+  if (!isSelf && !isSuperAdminDel && (!myMembership || !canRemoveMember(myMembership, targetMembership))) {
     return NextResponse.json({ error: 'Geen toegang om dit lid te verwijderen' }, { status: 403 });
   }
 

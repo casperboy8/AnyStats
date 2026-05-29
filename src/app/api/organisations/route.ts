@@ -15,6 +15,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
   const { name, slug, description } = await req.json();
 

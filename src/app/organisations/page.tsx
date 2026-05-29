@@ -2,38 +2,42 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { getUserOrgs } from '@/lib/org';
+import db from '@/lib/db';
+import type { User } from '@/lib/db';
 
 export default async function OrganisationsPage() {
   const session = await getSession();
   if (!session) redirect('/login');
 
   const orgs = getUserOrgs(session.id);
+  const dbUser = db.prepare('SELECT role FROM users WHERE id = ?').get(session.id) as Pick<User, 'role'> | undefined;
+  const isSuperAdmin = dbUser?.role === 'admin';
 
-  const isOwner = orgs.some(o => o.role === 'owner');
-  if (!isOwner) {
-    if (orgs.length === 0) redirect('/no-organisation');
-    if (orgs.length === 1) redirect(`/org/${orgs[0].slug}`);
-    redirect('/select-org');
-  }
+  if (orgs.length === 0 && !isSuperAdmin) redirect('/no-organisation');
+  if (orgs.length === 1 && !isSuperAdmin) redirect(`/org/${orgs[0].slug}`);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-lg font-semibold text-gray-900">Mijn groepen</h1>
-        <Link
-          href="/organisations/new"
-          className="bg-gray-900 hover:bg-gray-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
-        >
-          + Nieuwe groep
-        </Link>
+        {isSuperAdmin && (
+          <Link
+            href="/organisations/new"
+            className="bg-gray-900 hover:bg-gray-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
+          >
+            + Nieuwe groep
+          </Link>
+        )}
       </div>
 
       {orgs.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-400 text-sm mb-4">Je bent nog geen lid van een groep.</p>
-          <Link href="/organisations/new" className="text-amber-600 hover:underline text-sm font-medium">
-            Maak je eerste groep aan →
-          </Link>
+          <p className="text-gray-400 text-sm mb-4">Nog geen groepen aangemaakt.</p>
+          {isSuperAdmin && (
+            <Link href="/organisations/new" className="text-amber-600 hover:underline text-sm font-medium">
+              Maak de eerste groep aan →
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-2">

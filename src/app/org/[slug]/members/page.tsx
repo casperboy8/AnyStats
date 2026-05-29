@@ -40,9 +40,13 @@ export default function OrgMembersPage() {
       const myMember = membersData.find((m: Member) => m.user_id === me.id);
       const role = myMember?.role ?? null;
       setMyRole(role);
-      // Alleen owners en admins mogen deze pagina zien
-      if (role && role === 'member') {
+      // Super admins (site-rol) mogen altijd; org-leden alleen als owner/admin
+      const isSuperAdmin = me.role === 'admin';
+      if (!isSuperAdmin && role === 'member') {
         window.location.replace(`/org/${slug}`);
+      }
+      if (!isSuperAdmin && !role) {
+        window.location.replace(`/dashboard`);
       }
     }
     setLoading(false);
@@ -77,12 +81,13 @@ export default function OrgMembersPage() {
     load();
   }
 
+  const isSuperAdmin = session?.role === 'admin';
   const isOwner = myRole === 'owner';
   const isAdmin = myRole === 'admin';
-  const canManageMembers = isOwner || isAdmin;
+  const canManageMembers = isSuperAdmin || isOwner || isAdmin;
 
-  // Admin mag alleen 'member' rollen toevoegen; owner mag alles
-  const addableRoles: Array<{ value: string; label: string }> = isOwner
+  // Super admins en owners mogen alle rollen toewijzen; org-admins alleen 'member'
+  const addableRoles: Array<{ value: string; label: string }> = (isSuperAdmin || isOwner)
     ? [
         { value: 'member', label: 'Lid' },
         { value: 'admin', label: 'Admin' },
@@ -90,10 +95,9 @@ export default function OrgMembersPage() {
       ]
     : [{ value: 'member', label: 'Lid' }];
 
-  // Admin mag alleen een 'member' verwijderen; owner mag iedereen verwijderen
   function canRemove(target: Member): boolean {
-    if (target.user_id === session?.id) return false; // zichzelf verwijderen via deze knop niet
-    if (isOwner) return true;
+    if (target.user_id === session?.id) return false;
+    if (isSuperAdmin || isOwner) return true;
     if (isAdmin) return target.role === 'member';
     return false;
   }
@@ -154,8 +158,8 @@ export default function OrgMembersPage() {
               <span className="hidden sm:inline text-xs text-gray-400">{m.email}</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {/* Rol-dropdown: alleen owner mag rollen wijzigen, en niet van zichzelf */}
-              {isOwner && m.user_id !== session?.id ? (
+              {/* Rol-dropdown: owner en super admin mogen rollen wijzigen */}
+              {(isSuperAdmin || isOwner) && m.user_id !== session?.id ? (
                 <select
                   value={m.role}
                   onChange={e => changeRole(m.user_id, e.target.value)}

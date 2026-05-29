@@ -15,8 +15,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   const org = db.prepare('SELECT * FROM organisations WHERE slug = ?').get(slug) as Organisation | undefined;
   if (!org) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 });
 
+  const isSuperAdmin = session.role === 'admin';
   const membership = getOrgMembership(org.id, session.id);
-  if (!membership) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
+  if (!membership && !isSuperAdmin) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
   const members = db.prepare(`
     SELECT om.id, om.role, om.joined_at, u.id AS user_id, u.username, u.email
@@ -37,22 +38,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   const org = db.prepare('SELECT * FROM organisations WHERE slug = ?').get(slug) as Organisation | undefined;
   if (!org) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 });
 
+  const isSuperAdmin = session.role === 'admin';
   const myMembership = getOrgMembership(org.id, session.id);
-  // Minimaal admin nodig om leden toe te voegen
-  if (!myMembership || !hasMinRole(myMembership, 'admin')) {
+  // Minimaal admin nodig om leden toe te voegen (of super admin)
+  if (!isSuperAdmin && (!myMembership || !hasMinRole(myMembership, 'admin'))) {
     return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
   }
 
   const { username, role = 'member' } = await req.json();
   if (!username?.trim()) return NextResponse.json({ error: 'Gebruikersnaam is verplicht' }, { status: 400 });
 
-  // Controleer welke rollen deze actor mag toewijzen
-  const allowed = allowedRolesToAssign(myMembership);
-  if (!allowed.includes(role)) {
-    return NextResponse.json(
-      { error: `Jij mag alleen de rol '${allowed.join("' of '")}' toewijzen` },
-      { status: 403 }
-    );
+  // Super admins mogen elke rol toewijzen; anderen zijn beperkt
+  if (!isSuperAdmin) {
+    const allowed = allowedRolesToAssign(myMembership!);
+    if (!allowed.includes(role)) {
+      return NextResponse.json(
+        { error: `Jij mag alleen de rol '${allowed.join("' of '")}' toewijzen` },
+        { status: 403 }
+      );
+    }
   }
 
   const user = db.prepare('SELECT id FROM users WHERE username = ?').get(username.trim()) as { id: number } | undefined;
