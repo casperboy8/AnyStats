@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email en wachtwoord verplicht' }, { status: 400 });
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as User | undefined;
+  const user = db.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)').get(email) as User | undefined;
 
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
     return NextResponse.json({ error: 'Onjuiste gegevens' }, { status: 401 });

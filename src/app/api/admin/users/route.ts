@@ -23,13 +23,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Alle velden verplicht' }, { status: 400 });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ? OR username = ?').get(email, username);
+  const emailLower = email.trim().toLowerCase();
+  const usernameLower = username.trim().toLowerCase();
+
+  const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?').get(emailLower, usernameLower);
   if (existing) return NextResponse.json({ error: 'Email of gebruikersnaam al in gebruik' }, { status: 409 });
 
   const hash = await bcrypt.hash(password, 12);
   const result = db.prepare(
     'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)'
-  ).run(username, email, hash, role || 'user');
+  ).run(usernameLower, emailLower, hash, role || 'user');
 
   return NextResponse.json({ ok: true, id: result.lastInsertRowid });
 }

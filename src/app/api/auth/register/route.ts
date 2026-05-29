@@ -15,7 +15,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Wachtwoord minimaal 6 tekens' }, { status: 400 });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ? OR username = ?').get(email, username);
+  const emailLower = email.trim().toLowerCase();
+  const usernameLower = username.trim().toLowerCase();
+
+  const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?').get(emailLower, usernameLower);
   if (existing) {
     return NextResponse.json({ error: 'Email of gebruikersnaam al in gebruik' }, { status: 409 });
   }
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   const result = db.prepare(
     'INSERT INTO users (username, email, password_hash, role, phone_number) VALUES (?, ?, ?, ?, ?)'
-  ).run(username, email, hash, role, normalizedPhone);
+  ).run(usernameLower, emailLower, hash, role, normalizedPhone);
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid) as User;
 
