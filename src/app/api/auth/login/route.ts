@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   let redirect: string;
 
   if (orgs.length === 0) {
-    redirect = '/no-organisation';
+    redirect = user.role === 'admin' ? '/admin' : '/no-organisation';
   } else if (orgs.length === 1) {
     redirect = `/org/${orgs[0].slug}`;
   } else if (orgs.some(o => o.role === 'owner')) {
