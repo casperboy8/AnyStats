@@ -26,9 +26,9 @@ export default function Navbar({ user, orgs }: Props) {
   const isOwnerAnywhere = orgs.some(o => o.role === 'owner');
   const isCurrentOrgOwner = currentOrg?.role === 'owner';
   const isCurrentOrgAdmin = currentOrg?.role === 'admin';
-  const canSeeMembers = isCurrentOrgOwner || isCurrentOrgAdmin;
+  const canSeeMembers = isCurrentOrgOwner || isCurrentOrgAdmin || user?.role === 'admin';
   const multipleOrgs = orgs.length > 1;
-  const showSwitcher = isOwnerAnywhere || multipleOrgs;
+  const showSwitcher = orgs.length > 0;
 
   // Sluit dropdowns als buiten geklikt
   useEffect(() => {
