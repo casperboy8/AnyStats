@@ -3,10 +3,12 @@ import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { getOrgMembership, hasMinRole } from '@/lib/org';
 import type { Organisation, OrganisationInvite } from '@/lib/db';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes } from 'crypto';
 
 function generateCode(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const bytes = randomBytes(8);
+  return Array.from(bytes).map(b => chars[b % chars.length]).join('').substring(0, 8);
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {

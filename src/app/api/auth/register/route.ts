@@ -3,9 +3,17 @@ import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { normalizePhone } from '@/lib/phone';
+import { checkRateLimit } from '@/lib/rate-limit';
 import type { User } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
+    ?? req.headers.get('x-real-ip')
+    ?? 'unknown';
+  if (!checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Te veel registraties. Probeer het over een uur opnieuw.' }, { status: 429 });
+  }
+
   const { username, email, password, phone_number, invite_code } = await req.json();
 
   if (!username || !email || !password) {

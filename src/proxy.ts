@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback-secret-change-in-production'
-);
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) throw new Error('JWT_SECRET environment variable is not set');
+const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
 const publicPaths = ['/login', '/register', '/join'];
 const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapid-public-key', '/api/invite/'];

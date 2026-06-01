@@ -22,6 +22,12 @@ export async function POST(req: NextRequest) {
   if (!username || !email || !password) {
     return NextResponse.json({ error: 'Alle velden verplicht' }, { status: 400 });
   }
+  if (password.length < 8) {
+    return NextResponse.json({ error: 'Wachtwoord minimaal 8 tekens' }, { status: 400 });
+  }
+  if (!['user', 'admin'].includes(role || 'user')) {
+    return NextResponse.json({ error: 'Ongeldige rol' }, { status: 400 });
+  }
 
   const emailLower = email.trim().toLowerCase();
   const usernameLower = username.trim().toLowerCase();
