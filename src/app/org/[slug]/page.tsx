@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Modal from '@/components/Modal';
 
 type Anytimer = {
@@ -21,6 +21,8 @@ type SessionUser = { id: number; username: string; role: string };
 
 export default function OrgDashboardPage() {
   const { slug } = useParams<{ slug: string }>();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [session, setSession] = useState<SessionUser | null>(null);
   const [anytimers, setAnytimers] = useState<Anytimer[]>([]);
@@ -49,6 +51,30 @@ export default function OrgDashboardPage() {
     if (usersRes.ok) setUsers(await usersRes.json());
     setLoading(false);
   }, [slug]);
+
+  // Verwerk ?action=accept|decline|upload&id=X na laden
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const id = searchParams.get('id');
+    if (!action || !id || loading) return;
+
+    const anytimerId = Number(id);
+    const anytimer = anytimers.find(a => a.id === anytimerId);
+    if (!anytimer || !session) return;
+
+    // Verwijder query params uit URL zodat refresh niet opnieuw triggert
+    router.replace(`/org/${slug}`, { scroll: false });
+
+    if (action === 'accept' && anytimer.receiver_id === session.id && anytimer.status === 'pending') {
+      accept(anytimerId);
+    } else if (action === 'decline' && anytimer.receiver_id === session.id && anytimer.status === 'pending') {
+      decline(anytimerId);
+    } else if (action === 'upload' && anytimer.receiver_id === session.id && anytimer.status === 'inzetten_pending') {
+      setUploadModal(anytimer);
+      setUploadFile(null);
+      setUploadError('');
+    }
+  }, [loading, searchParams, anytimers, session, slug]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
