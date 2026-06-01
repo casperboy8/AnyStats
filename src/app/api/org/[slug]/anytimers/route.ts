@@ -69,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   });
 
   // WhatsApp — fire-and-forget
-  notifyAnyReceived(receiver_id, session.username, reason.trim(), org.name).catch(() => {});
+  notifyAnyReceived(receiver_id, session.username, reason.trim(), org.name, anytimerId, org.slug).catch(() => {});
 
   return NextResponse.json({ ok: true, id: anytimerId });
 }

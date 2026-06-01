@@ -70,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   );
 
   // WhatsApp-notificatie voor het toegevoegde lid — fire-and-forget
-  notifyAddedToOrg(user.id, org.name, role).catch(() => {});
+  notifyAddedToOrg(user.id, org.name, role, org.slug).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

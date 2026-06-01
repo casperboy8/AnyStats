@@ -56,11 +56,12 @@ export async function POST(req: NextRequest) {
 
   // WhatsApp-notificatie — fire-and-forget, breekt nooit de response
   let orgName = 'AnyStats';
+  let orgSlug: string | null = null;
   if (organisation_id) {
-    const org = db.prepare('SELECT name FROM organisations WHERE id = ?').get(organisation_id) as { name: string } | undefined;
-    if (org) orgName = org.name;
+    const org = db.prepare('SELECT name, slug FROM organisations WHERE id = ?').get(organisation_id) as { name: string; slug: string } | undefined;
+    if (org) { orgName = org.name; orgSlug = org.slug; }
   }
-  notifyAnyReceived(receiver_id, session.username, reason.trim(), orgName).catch(() => {});
+  notifyAnyReceived(receiver_id, session.username, reason.trim(), orgName, anytimerId, orgSlug).catch(() => {});
 
   return NextResponse.json({ ok: true, id: anytimerId });
 }

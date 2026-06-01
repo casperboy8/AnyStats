@@ -70,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cod
     UPDATE organisation_invites SET use_count = use_count + 1 WHERE id = ?
   `).run(invite.id);
 
-  notifyAddedToOrg(session.id, invite.org_name, invite.role).catch(() => {});
+  notifyAddedToOrg(session.id, invite.org_name, invite.role, invite.org_slug).catch(() => {});
 
   return NextResponse.json({ ok: true, slug: invite.org_slug });
 }
