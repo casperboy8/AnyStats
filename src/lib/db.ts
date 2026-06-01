@@ -75,6 +75,21 @@ db.exec(`
   );
 `);
 
+// Koppelcodes voor teams
+db.exec(`
+  CREATE TABLE IF NOT EXISTS organisation_invites (
+    id              TEXT PRIMARY KEY,
+    organisation_id TEXT NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+    code            TEXT NOT NULL UNIQUE,
+    role            TEXT NOT NULL DEFAULT 'member' CHECK(role IN ('admin', 'member')),
+    created_by      INTEGER NOT NULL REFERENCES users(id),
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at      DATETIME,
+    max_uses        INTEGER,
+    use_count       INTEGER NOT NULL DEFAULT 0
+  );
+`);
+
 // Kolom migraties (veilig: catch als kolom al bestaat)
 for (const sql of [
   'ALTER TABLE anytimers ADD COLUMN proof_url TEXT',
@@ -127,6 +142,18 @@ export type OrganisationMember = {
   user_id: number;
   role: 'owner' | 'admin' | 'member';
   joined_at: string;
+};
+
+export type OrganisationInvite = {
+  id: string;
+  organisation_id: string;
+  code: string;
+  role: 'admin' | 'member';
+  created_by: number;
+  created_at: string;
+  expires_at: string | null;
+  max_uses: number | null;
+  use_count: number;
 };
 
 export type Video = {

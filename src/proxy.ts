@@ -6,8 +6,8 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-secret-change-in-production'
 );
 
-const publicPaths = ['/login', '/register'];
-const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapid-public-key'];
+const publicPaths = ['/login', '/register', '/join'];
+const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapid-public-key', '/api/invite/'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

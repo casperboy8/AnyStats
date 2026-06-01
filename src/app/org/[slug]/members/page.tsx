@@ -14,6 +14,7 @@ type Member = {
 };
 
 type SessionUser = { id: number; username: string; role: string };
+type Invite = { id: string; code: string; role: string; use_count: number; max_uses: number | null; expires_at: string | null; created_by_username: string };
 
 export default function OrgMembersPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -27,15 +28,23 @@ export default function OrgMembersPage() {
   const [addError, setAddError] = useState('');
   const [addLoading, setAddLoading] = useState(false);
 
+  const [invites, setInvites] = useState<Invite[]>([]);
+  const [inviteRole, setInviteRole] = useState<'member' | 'admin'>('member');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
   const load = useCallback(async () => {
-    const [meRes, membersRes] = await Promise.all([
+    const [meRes, membersRes, invitesRes] = await Promise.all([
       fetch('/api/auth/me'),
       fetch(`/api/organisations/${slug}/members`),
+      fetch(`/api/org/${slug}/invites`),
     ]);
     const me = meRes.ok ? await meRes.json() : null;
     const membersData = membersRes.ok ? await membersRes.json() : [];
+    const invitesData = invitesRes.ok ? await invitesRes.json() : [];
     setSession(me);
     setMembers(Array.isArray(membersData) ? membersData : []);
+    setInvites(Array.isArray(invitesData) ? invitesData : []);
     if (me && Array.isArray(membersData)) {
       const myMember = membersData.find((m: Member) => m.user_id === me.id);
       const role = myMember?.role ?? null;
@@ -79,6 +88,28 @@ export default function OrgMembersPage() {
   async function removeMember(userId: number) {
     await fetch(`/api/organisations/${slug}/members/${userId}`, { method: 'DELETE' });
     load();
+  }
+
+  async function createInvite() {
+    setInviteLoading(true);
+    await fetch(`/api/org/${slug}/invites`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: inviteRole }),
+    });
+    setInviteLoading(false);
+    load();
+  }
+
+  async function deleteInvite(code: string) {
+    await fetch(`/api/org/${slug}/invites/${code}`, { method: 'DELETE' });
+    load();
+  }
+
+  function copyInviteLink(code: string) {
+    navigator.clipboard.writeText(`${window.location.origin}/join/${code}`);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
   }
 
   const isSuperAdmin = session?.role === 'admin';
@@ -146,6 +177,61 @@ export default function OrgMembersPage() {
             </button>
           </div>
           {addError && <p className="text-red-500 text-sm mt-2">{addError}</p>}
+        </div>
+      )}
+
+      {/* Koppelcodes */}
+      {canManageMembers && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+          <h2 className="text-sm font-medium text-gray-700 mb-3">Koppelcodes</h2>
+          <div className="flex items-center gap-2 mb-3">
+            <select
+              value={inviteRole}
+              onChange={e => setInviteRole(e.target.value as 'member' | 'admin')}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+            >
+              <option value="member">Lid</option>
+              {(isSuperAdmin || isOwner) && <option value="admin">Admin</option>}
+            </select>
+            <button
+              onClick={createInvite}
+              disabled={inviteLoading}
+              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+            >
+              {inviteLoading ? 'Bezig...' : '+ Nieuwe code'}
+            </button>
+          </div>
+          {invites.length === 0 ? (
+            <p className="text-xs text-gray-400">Nog geen koppelcodes aangemaakt.</p>
+          ) : (
+            <div className="space-y-2">
+              {invites.map(inv => (
+                <div key={inv.id} className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                  <div className="min-w-0">
+                    <span className="font-mono text-sm font-semibold text-gray-900">{inv.code}</span>
+                    <span className="text-xs text-gray-400 ml-2">
+                      {inv.role === 'admin' ? 'Admin' : 'Lid'} · {inv.use_count} gebruikt
+                      {inv.max_uses !== null ? `/${inv.max_uses}` : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => copyInviteLink(inv.code)}
+                      className="text-xs text-amber-600 hover:text-amber-800 transition-colors"
+                    >
+                      {copiedCode === inv.code ? 'Gekopieerd!' : 'Kopieer link'}
+                    </button>
+                    <button
+                      onClick={() => deleteInvite(inv.code)}
+                      className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      Verwijder
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

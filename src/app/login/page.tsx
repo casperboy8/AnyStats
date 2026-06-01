@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteCode = searchParams.get('invite');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +22,7 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, invite_code: inviteCode ?? undefined }),
     });
 
     const data = await res.json();
@@ -80,7 +83,10 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-gray-400 mt-5">
           Nog geen account?{' '}
-          <Link href="/register" className="text-gray-700 hover:text-gray-900 font-medium">
+          <Link
+            href={inviteCode ? `/register?invite=${inviteCode}` : '/register'}
+            className="text-gray-700 hover:text-gray-900 font-medium"
+          >
             Registreer
           </Link>
         </p>
