@@ -45,7 +45,7 @@ jobs:
           export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
           cd /var/www/anystats
 
-          pm2 restart anystats --update-env || pm2 start npm --name "anystats" -- start
+          pm2 restart ecosystem.config.js --update-env || pm2 start ecosystem.config.js
           sleep 5
 
           # Health check: verwacht een 2xx of 3xx response
@@ -68,7 +68,7 @@ jobs:
             echo "⚠ Fout gevonden — terugzetten naar vorige versie..."
             rm -rf .next
             mv .next.bak .next
-            pm2 restart anystats --update-env || true
+            pm2 restart ecosystem.config.js --update-env || true
             sleep 3
 
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)

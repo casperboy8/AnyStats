@@ -28,6 +28,8 @@ declare global {
   var __wa_init: boolean;
   // eslint-disable-next-line no-var
   var __wa_error: string | null;
+  // eslint-disable-next-line no-var
+  var __wa_shutdown_registered: boolean;
 }
 
 globalThis.__wa_status ??= 'disconnected';
@@ -35,6 +37,7 @@ globalThis.__wa_qr ??= null;
 globalThis.__wa_phone ??= null;
 globalThis.__wa_init ??= false;
 globalThis.__wa_error ??= null;
+globalThis.__wa_shutdown_registered ??= false;
 
 export function getWhatsappClient(): Client | null {
   return globalThis.__wa_client ?? null;
@@ -184,6 +187,28 @@ export function initWhatsappClient(): void {
     globalThis.__wa_error = `Verbinding verbroken: ${reason}`;
     globalThis.__wa_init = false;
   });
+
+  // Graceful shutdown: destroy client netjes bij SIGTERM/SIGINT zodat
+  // WhatsApp de sessie bewaart en na herstart geen nieuwe QR nodig is.
+  if (!globalThis.__wa_shutdown_registered) {
+    globalThis.__wa_shutdown_registered = true;
+
+    const shutdown = (signal: string) => {
+      console.log(`[WhatsApp] ${signal} ontvangen — verbinding netjes verbreken...`);
+      const c = globalThis.__wa_client;
+      if (c) {
+        c.destroy()
+          .then(() => console.log('[WhatsApp] Verbinding gesloten'))
+          .catch(() => {})
+          .finally(() => process.exit(0));
+      } else {
+        process.exit(0);
+      }
+    };
+
+    process.once('SIGTERM', () => shutdown('SIGTERM'));
+    process.once('SIGINT',  () => shutdown('SIGINT'));
+  }
 
   client.initialize().catch((err: Error) => {
     console.error('[WhatsApp] Initialisatie mislukt:', err.message);
