@@ -9,7 +9,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
 
   const { id } = await params;
-  const { goed } = await req.json(); // true = gedronken, false = geweigerd
+  const body = await req.json().catch(() => ({}));
+  const { goed } = body as { goed?: boolean };
+
+  if (typeof goed !== 'boolean') {
+    return NextResponse.json({ error: 'Veld "goed" (boolean) is verplicht' }, { status: 400 });
+  }
 
   const anytimer = db.prepare('SELECT * FROM anytimers WHERE id = ?').get(id) as Anytimer | undefined;
 
