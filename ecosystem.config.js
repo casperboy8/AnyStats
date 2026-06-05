@@ -9,7 +9,19 @@ module.exports = {
       // Geef Chrome 10 seconden om netjes af te sluiten (graceful shutdown)
       kill_timeout: 10000,
 
-      // Omgevingsvariabelen worden geladen uit .env — niet hier hardcoden
+      env: {
+        NODE_ENV: 'production',
+      },
+    },
+    {
+      name: 'anystats-db',
+      script: 'db-viewer.js',
+      cwd: '/var/www/anystats',
+
+      // Nooit automatisch herstarten bij deploy — aparte service
+      autorestart: true,
+      watch: false,
+
       env: {
         NODE_ENV: 'production',
       },
