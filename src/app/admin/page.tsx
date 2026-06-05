@@ -64,10 +64,6 @@ export default function AdminPage() {
           <h2 className="text-sm font-semibold text-gray-900 mb-1">📱 WhatsApp</h2>
           <p className="text-gray-400 text-sm">Verbinding, QR-code, testbericht</p>
         </Link>
-        <Link href="/admin/database" className="block bg-white rounded-xl border border-gray-100 p-5 hover:border-gray-300 transition-colors group">
-          <h2 className="text-sm font-semibold text-gray-900 mb-1">🗄️ Database</h2>
-          <p className="text-gray-400 text-sm">Tabellen bekijken, SQL uitvoeren (alleen lezen)</p>
-        </Link>
       </div>
     </div>
   );
