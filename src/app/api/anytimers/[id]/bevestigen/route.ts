@@ -38,8 +38,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     db.prepare('UPDATE anytimers SET status = ? WHERE id = ?').run('active', id);
 
     const penaltyResult = db.prepare(
-      'INSERT INTO anytimers (giver_id, receiver_id, reason, status) VALUES (?, ?, ?, ?)'
-    ).run(session.id, anytimer.receiver_id, `Straf: geweigerd (${anytimer.reason})`, 'active');
+      'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id) VALUES (?, ?, ?, ?, ?)'
+    ).run(session.id, anytimer.receiver_id, `Straf: geweigerd (${anytimer.reason})`, 'active', anytimer.organisation_id);
 
     const receiverUser = db.prepare('SELECT username FROM users WHERE id = ?').get(anytimer.receiver_id) as { username: string };
     const message = `${receiverUser.username} heeft geweigerd. Anytimer blijft actief + 1 extra.`;

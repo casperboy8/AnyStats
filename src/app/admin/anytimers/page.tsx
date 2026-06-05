@@ -14,6 +14,7 @@ type Anytimer = {
 };
 
 type User = { id: number; username: string };
+type Org = { id: string; name: string; slug: string };
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Wacht op acceptatie',
@@ -32,21 +33,27 @@ const STATUS_COLORS: Record<string, string> = {
 export default function AdminAnytimersPage() {
   const [anytimers, setAnytimers] = useState<Anytimer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [orgs, setOrgs] = useState<Org[]>([]);
   const [loading, setLoading] = useState(true);
   const [newModal, setNewModal] = useState(false);
-  const [form, setForm] = useState({ giver_id: '', receiver_id: '', reason: '', status: 'active' });
+  const [form, setForm] = useState({ giver_id: '', receiver_id: '', reason: '', status: 'active', organisation_id: '' });
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
 
   async function load() {
-    const [anyRes, usersRes] = await Promise.all([
+    const [anyRes, usersRes, orgsRes] = await Promise.all([
       fetch('/api/admin/anytimers'),
       fetch('/api/admin/users'),
+      fetch('/api/admin/organisations'),
     ]);
     if (anyRes.ok) setAnytimers(await anyRes.json());
     if (usersRes.ok) {
       const data = await usersRes.json();
       setUsers(Array.isArray(data) ? data.map((u: { id: number; username: string }) => ({ id: u.id, username: u.username })) : []);
+    }
+    if (orgsRes.ok) {
+      const data = await orgsRes.json();
+      setOrgs(Array.isArray(data) ? data : []);
     }
     setLoading(false);
   }
@@ -58,12 +65,17 @@ export default function AdminAnytimersPage() {
     const res = await fetch('/api/admin/anytimers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, giver_id: Number(form.giver_id), receiver_id: Number(form.receiver_id) }),
+      body: JSON.stringify({
+        ...form,
+        giver_id: Number(form.giver_id),
+        receiver_id: Number(form.receiver_id),
+        organisation_id: form.organisation_id || undefined,
+      }),
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error); return; }
     setNewModal(false);
-    setForm({ giver_id: '', receiver_id: '', reason: '', status: 'active' });
+    setForm({ giver_id: '', receiver_id: '', reason: '', status: 'active', organisation_id: '' });
     load();
   }
 
@@ -178,6 +190,13 @@ export default function AdminAnytimersPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
             <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-800 dark:text-gray-100">
               {Object.entries(STATUS_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Groep <span className="text-gray-400 font-normal">(optioneel — automatisch als leeg)</span></label>
+            <select value={form.organisation_id} onChange={e => setForm(f => ({ ...f, organisation_id: e.target.value }))} className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-800 dark:text-gray-100">
+              <option value="">Automatisch detecteren</option>
+              {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
           </div>
           {error && <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 text-sm px-3 py-2 rounded-lg">{error}</div>}

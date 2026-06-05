@@ -125,6 +125,7 @@ export type Anytimer = {
   activated_at: string | null;
   resolved_at: string | null;
   proof_url: string | null;
+  organisation_id: string | null;
 };
 
 export type Organisation = {

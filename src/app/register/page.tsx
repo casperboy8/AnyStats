@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteCode = searchParams.get('invite');
+
   const [form, setForm] = useState({ username: '', email: '', password: '', phone_number: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +25,7 @@ export default function RegisterPage() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, invite_code: inviteCode ?? undefined }),
     });
 
     const data = await res.json();
@@ -33,7 +36,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push('/dashboard');
+    router.push(data.redirect ?? '/no-organisation');
     router.refresh();
   }
 

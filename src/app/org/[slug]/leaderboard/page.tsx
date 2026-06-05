@@ -14,15 +14,29 @@ type Stat = {
   ontvangen_totaal_global: number;
 };
 
+type Pair = {
+  giver_id: number;
+  giver_username: string;
+  receiver_id: number;
+  receiver_username: string;
+  count: number;
+};
+
 export default function OrgLeaderboardPage() {
   const { slug } = useParams<{ slug: string }>();
   const [stats, setStats] = useState<Stat[]>([]);
+  const [pairs, setPairs] = useState<Pair[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/org/${slug}/leaderboard`)
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setStats(data); setLoading(false); });
+    Promise.all([
+      fetch(`/api/org/${slug}/leaderboard`).then(r => r.json()),
+      fetch(`/api/org/${slug}/pairs`).then(r => r.json()),
+    ]).then(([leaderboard, pairsData]) => {
+      if (Array.isArray(leaderboard)) setStats(leaderboard);
+      if (Array.isArray(pairsData)) setPairs(pairsData);
+      setLoading(false);
+    });
   }, [slug]);
 
   if (loading) {
@@ -82,7 +96,7 @@ export default function OrgLeaderboardPage() {
       </div>
 
       {/* Totaalkaarten */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 mb-8">
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Totaal gedronken</p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
@@ -96,6 +110,29 @@ export default function OrgLeaderboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Wie op wie */}
+      {pairs.length > 0 && (
+        <div>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Wie op wie</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="grid grid-cols-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              <div>Gever</div>
+              <div>Ontvanger</div>
+              <div className="text-right">Gedronken</div>
+            </div>
+            {pairs.map((p, i) => (
+              <div key={i} className="grid grid-cols-3 px-4 py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center">
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{p.giver_username}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 truncate">{p.receiver_username}</div>
+                <div className="text-right">
+                  <span className="text-sm font-semibold text-amber-600">{p.count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
