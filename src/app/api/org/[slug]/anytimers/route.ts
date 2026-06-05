@@ -24,11 +24,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     FROM anytimers a
     JOIN users u_giver ON a.giver_id = u_giver.id
     JOIN users u_receiver ON a.receiver_id = u_receiver.id
-    WHERE a.organisation_id = ?
-      AND (a.giver_id = ? OR a.receiver_id = ?)
+    WHERE (a.giver_id = ? OR a.receiver_id = ?)
       AND a.status != 'completed'
+      AND EXISTS (SELECT 1 FROM organisation_members WHERE organisation_id = ? AND user_id = a.giver_id)
+      AND EXISTS (SELECT 1 FROM organisation_members WHERE organisation_id = ? AND user_id = a.receiver_id)
     ORDER BY a.created_at DESC
-  `).all(org.id, session.id, session.id);
+  `).all(session.id, session.id, org.id, org.id);
 
   return NextResponse.json(anytimers);
 }

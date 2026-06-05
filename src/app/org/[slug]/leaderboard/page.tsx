@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { AchievementBadge, getAchievementTier } from '@/components/AchievementBadge';
 
 type Stat = {
   id: number;
@@ -10,6 +11,7 @@ type Stat = {
   ontvangen_actief: number;
   gegeven_totaal: number;
   ontvangen_totaal: number;
+  ontvangen_totaal_global: number;
 };
 
 export default function OrgLeaderboardPage() {
@@ -58,7 +60,12 @@ export default function OrgLeaderboardPage() {
                 ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : i === 2 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
                 {i + 1}
               </span>
-              <span className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{s.username}</span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className={`font-medium text-sm truncate ${getAchievementTier(s.ontvangen_totaal_global)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>
+                  {s.username}
+                </span>
+                <AchievementBadge tier={getAchievementTier(s.ontvangen_totaal_global)} />
+              </div>
             </div>
             <div className="hidden sm:block text-center">
               <span className={`text-sm font-medium ${s.ontvangen_actief > 0 ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`}>

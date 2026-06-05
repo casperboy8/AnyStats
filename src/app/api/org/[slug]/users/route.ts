@@ -16,12 +16,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   if (!membership) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
   const members = db.prepare(`
-    SELECT u.id, u.username
+    SELECT
+      u.id,
+      u.username,
+      (SELECT COUNT(*) FROM anytimers a WHERE a.receiver_id = u.id AND a.status = 'completed') AS ontvangen_totaal_global
     FROM users u
     JOIN organisation_members om ON om.user_id = u.id
     WHERE om.organisation_id = ?
     ORDER BY u.username
-  `).all(org.id) as { id: number; username: string }[];
+  `).all(org.id) as { id: number; username: string; ontvangen_totaal_global: number }[];
 
   return NextResponse.json(members);
 }

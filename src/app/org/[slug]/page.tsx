@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Modal from '@/components/Modal';
+import { AchievementBadge, getAchievementTier, type AchievementTier } from '@/components/AchievementBadge';
 
 type Anytimer = {
   id: number;
@@ -16,7 +17,7 @@ type Anytimer = {
   proof_url: string | null;
 };
 
-type User = { id: number; username: string };
+type User = { id: number; username: string; ontvangen_totaal_global: number };
 type SessionUser = { id: number; username: string; role: string };
 
 export default function OrgDashboardPage() {
@@ -129,6 +130,9 @@ export default function OrgDashboardPage() {
   );
 
   const myId = session?.id;
+  const achievementMap = new Map<number, AchievementTier | null>(
+    users.map(u => [u.id, getAchievementTier(u.ontvangen_totaal_global)])
+  );
   const opMij = anytimers.filter(a => a.receiver_id === myId && a.status !== 'completed');
   const vanMij = anytimers.filter(a => a.giver_id === myId && a.status !== 'completed');
   const pendingOntvangen = opMij.filter(a => a.status === 'pending');
@@ -162,9 +166,10 @@ export default function OrgDashboardPage() {
               {pendingOntvangen.map(a => (
                 <div key={a.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.giver_username}</span>
-                      <span className="text-gray-400 dark:text-gray-500 mx-2">·</span>
+                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-sm font-medium ${achievementMap.get(a.giver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.giver_username}</span>
+                      <AchievementBadge tier={achievementMap.get(a.giver_id) ?? null} />
+                      <span className="text-gray-400 dark:text-gray-500">·</span>
                       <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
                     </div>
                     <div className="flex gap-1.5 shrink-0">
@@ -177,9 +182,10 @@ export default function OrgDashboardPage() {
               {activeOpMij.map(a => (
                 <div key={a.id} className={`bg-white dark:bg-gray-900 border rounded-lg p-3 ${a.status === 'inzetten_pending' ? 'border-red-200 dark:border-red-800' : 'border-gray-200 dark:border-gray-700'}`}>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.giver_username}</span>
-                      <span className="text-gray-400 dark:text-gray-500 mx-2">·</span>
+                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-sm font-medium ${achievementMap.get(a.giver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.giver_username}</span>
+                      <AchievementBadge tier={achievementMap.get(a.giver_id) ?? null} />
+                      <span className="text-gray-400 dark:text-gray-500">·</span>
                       <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
                     </div>
                     {a.status === 'inzetten_pending' && (
@@ -213,18 +219,22 @@ export default function OrgDashboardPage() {
             <div className="space-y-2">
               {pendingVerzonden.map(a => (
                 <div key={a.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg p-3 opacity-50">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.receiver_username}</span>
-                  <span className="text-gray-400 dark:text-gray-500 mx-2">·</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
-                  <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">wacht op acceptatie</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-sm font-medium ${achievementMap.get(a.receiver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.receiver_username}</span>
+                    <AchievementBadge tier={achievementMap.get(a.receiver_id) ?? null} />
+                    <span className="text-gray-400 dark:text-gray-500">·</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">wacht op acceptatie</span>
+                  </div>
                 </div>
               ))}
               {activeVanMij.map(a => (
                 <div key={a.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.receiver_username}</span>
-                      <span className="text-gray-400 dark:text-gray-500 mx-2">·</span>
+                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-sm font-medium ${achievementMap.get(a.receiver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.receiver_username}</span>
+                      <AchievementBadge tier={achievementMap.get(a.receiver_id) ?? null} />
+                      <span className="text-gray-400 dark:text-gray-500">·</span>
                       <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
                     </div>
                     <div className="shrink-0">
