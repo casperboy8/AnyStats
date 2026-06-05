@@ -53,27 +53,27 @@ export default function OrgSettingsPage() {
   return (
     <div className="max-w-md mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href={`/org/${slug}`} className="text-gray-400 hover:text-gray-700 text-sm">← Dashboard</Link>
-        <h1 className="text-lg font-semibold text-gray-900">Instellingen</h1>
+        <Link href={`/org/${slug}`} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 text-sm">← Dashboard</Link>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Instellingen</h1>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Naam</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Naam</label>
           <input
             type="text"
             value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Beschrijving</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Beschrijving</label>
           <input
             type="text"
             value={form.description}
             onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
 
@@ -83,7 +83,7 @@ export default function OrgSettingsPage() {
         <button
           onClick={save}
           disabled={saveLoading || !form.name.trim()}
-          className="w-full bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+          className="w-full bg-gray-900 dark:bg-white hover:bg-gray-700 disabled:opacity-50 text-white dark:text-gray-900 font-medium py-2.5 rounded-lg text-sm transition-colors"
         >
           {saveLoading ? 'Opslaan...' : 'Opslaan'}
         </button>
@@ -92,11 +92,11 @@ export default function OrgSettingsPage() {
       {isOwner && (
         <div className="mt-12 pt-6 border-t border-red-100">
           <h2 className="text-sm font-medium text-red-700 mb-2">Gevaarlijke zone</h2>
-          <p className="text-xs text-gray-400 mb-4">Dit verwijdert de groep permanent. Er is geen weg terug.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Dit verwijdert de groep permanent. Er is geen weg terug.</p>
           <button
             onClick={deleteOrg}
             disabled={deleteLoading}
-            className="w-full border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 font-medium py-2.5 rounded-lg text-sm transition-colors"
+            className="w-full border border-red-200 dark:border-red-800 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 font-medium py-2.5 rounded-lg text-sm transition-colors"
           >
             {deleteLoading ? 'Verwijderen...' : 'Groep verwijderen'}
           </button>

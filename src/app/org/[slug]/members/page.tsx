@@ -142,26 +142,26 @@ export default function OrgMembersPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href={`/org/${slug}`} className="text-gray-400 hover:text-gray-700 text-sm">← Dashboard</Link>
-        <h1 className="text-lg font-semibold text-gray-900">Leden</h1>
+        <Link href={`/org/${slug}`} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 text-sm">← Dashboard</Link>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Leden</h1>
       </div>
 
       {canManageMembers && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-          <h2 className="text-sm font-medium text-gray-700 mb-3">Lid toevoegen</h2>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
+          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Lid toevoegen</h2>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={addUsername}
               onChange={e => setAddUsername(e.target.value)}
               placeholder="Gebruikersnaam"
-              className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             />
             {addableRoles.length > 1 && (
               <select
                 value={addRole}
                 onChange={e => setAddRole(e.target.value as 'member' | 'admin' | 'owner')}
-                className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-800 dark:text-gray-100"
               >
                 {addableRoles.map(r => (
                   <option key={r.value} value={r.value}>{r.label}</option>
@@ -171,7 +171,7 @@ export default function OrgMembersPage() {
             <button
               onClick={addMember}
               disabled={addLoading || !addUsername.trim()}
-              className="bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition-colors"
+              className="bg-gray-900 dark:bg-white hover:bg-gray-700 disabled:opacity-50 text-white dark:text-gray-900 font-medium px-4 py-2.5 rounded-lg text-sm transition-colors"
             >
               {addLoading ? 'Bezig...' : 'Toevoegen'}
             </button>
@@ -182,13 +182,13 @@ export default function OrgMembersPage() {
 
       {/* Koppelcodes */}
       {canManageMembers && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-          <h2 className="text-sm font-medium text-gray-700 mb-3">Koppelcodes</h2>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
+          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Koppelcodes</h2>
           <div className="flex items-center gap-2 mb-3">
             <select
               value={inviteRole}
               onChange={e => setInviteRole(e.target.value as 'member' | 'admin')}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+              className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-800 dark:text-gray-100"
             >
               <option value="member">Lid</option>
               {(isSuperAdmin || isOwner) && <option value="admin">Admin</option>}
@@ -202,14 +202,14 @@ export default function OrgMembersPage() {
             </button>
           </div>
           {invites.length === 0 ? (
-            <p className="text-xs text-gray-400">Nog geen koppelcodes aangemaakt.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Nog geen koppelcodes aangemaakt.</p>
           ) : (
             <div className="space-y-2">
               {invites.map(inv => (
-                <div key={inv.id} className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                <div key={inv.id} className="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2">
                   <div className="min-w-0">
-                    <span className="font-mono text-sm font-semibold text-gray-900">{inv.code}</span>
-                    <span className="text-xs text-gray-400 ml-2">
+                    <span className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">{inv.code}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
                       {inv.role === 'admin' ? 'Admin' : 'Lid'} · {inv.use_count} gebruikt
                       {inv.max_uses !== null ? `/${inv.max_uses}` : ''}
                     </span>
@@ -237,11 +237,11 @@ export default function OrgMembersPage() {
 
       <div className="space-y-2">
         {members.map(m => (
-          <div key={m.id} className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between gap-3">
+          <div key={m.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <span className="text-sm font-medium text-gray-900">{m.username}</span>
-              <span className="hidden sm:inline text-gray-400 mx-2">·</span>
-              <span className="hidden sm:inline text-xs text-gray-400">{m.email}</span>
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{m.username}</span>
+              <span className="hidden sm:inline text-gray-400 dark:text-gray-500 mx-2">·</span>
+              <span className="hidden sm:inline text-xs text-gray-400 dark:text-gray-500">{m.email}</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {/* Rol-dropdown: owner en super admin mogen rollen wijzigen */}
@@ -249,7 +249,7 @@ export default function OrgMembersPage() {
                 <select
                   value={m.role}
                   onChange={e => changeRole(m.user_id, e.target.value)}
-                  className="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none"
+                  className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none"
                 >
                   <option value="member">Lid</option>
                   <option value="admin">Admin</option>
@@ -257,9 +257,9 @@ export default function OrgMembersPage() {
                 </select>
               ) : (
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  m.role === 'owner' ? 'bg-amber-50 text-amber-700' :
-                  m.role === 'admin' ? 'bg-blue-50 text-blue-700' :
-                  'bg-gray-100 text-gray-500'
+                  m.role === 'owner' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700' :
+                  m.role === 'admin' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700' :
+                  'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                 }`}>
                   {m.role === 'owner' ? 'Owner' : m.role === 'admin' ? 'Admin' : 'Lid'}
                 </span>
@@ -276,7 +276,7 @@ export default function OrgMembersPage() {
               )}
 
               {m.user_id === session?.id && (
-                <span className="text-xs text-gray-400">jij</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">jij</span>
               )}
             </div>
           </div>

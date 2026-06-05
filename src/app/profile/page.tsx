@@ -59,28 +59,28 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-8">
-      <h1 className="text-lg font-semibold text-gray-900 mb-6">Profiel</h1>
+      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Profiel</h1>
 
       {/* Accountinfo — alleen-lezen */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6 space-y-3">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6 space-y-3">
         <div>
-          <p className="text-xs text-gray-400 mb-0.5">Gebruikersnaam</p>
-          <p className="text-sm font-medium text-gray-900">{profile?.username}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Gebruikersnaam</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{profile?.username}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 mb-0.5">Email</p>
-          <p className="text-sm text-gray-700">{profile?.email}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Email</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300">{profile?.email}</p>
         </div>
       </div>
 
       {/* WhatsApp instellingen */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-5">
-        <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-5">
+        <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
           📱 WhatsApp notificaties
         </h2>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1.5">
+          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">
             Telefoonnummer
           </label>
           <input
@@ -88,9 +88,9 @@ export default function ProfilePage() {
             value={phone}
             onChange={e => setPhone(e.target.value)}
             placeholder="+31612345678"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
           />
-          <p className="text-xs text-gray-400 mt-1.5">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
             Gebruik internationaal formaat, bijv. <span className="font-mono">+31612345678</span> of <span className="font-mono">0612345678</span>.
             Laat leeg om geen WhatsApp te ontvangen.
           </p>
@@ -99,8 +99,8 @@ export default function ProfilePage() {
         {/* Toggle */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-700">WhatsApp notificaties ontvangen</p>
-            <p className="text-xs text-gray-400 mt-0.5">Ontvang berichten bij nieuwe anytimers en groep-uitnodigingen</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp notificaties ontvangen</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Ontvang berichten bij nieuwe anytimers en groep-uitnodigingen</p>
           </div>
           <button
             type="button"
@@ -125,7 +125,7 @@ export default function ProfilePage() {
         <button
           onClick={save}
           disabled={saving}
-          className="w-full bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+          className="w-full bg-gray-900 dark:bg-white hover:bg-gray-700 disabled:opacity-50 text-white dark:text-gray-900 font-medium py-2.5 rounded-lg text-sm transition-colors"
         >
           {saving ? 'Opslaan...' : 'Opslaan'}
         </button>

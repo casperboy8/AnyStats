@@ -39,17 +39,17 @@ export default function JoinPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f9f9f8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#f9f9f8] dark:bg-[#111113] flex items-center justify-center">
         <div className="text-amber-600">Laden...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f9f8] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f9f9f8] dark:bg-[#111113] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-8 text-center">
+          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -57,26 +57,26 @@ export default function JoinPage() {
 
           {error ? (
             <>
-              <h1 className="text-base font-semibold text-gray-900 mb-2">Ongeldige koppelcode</h1>
-              <p className="text-sm text-gray-500">{error}</p>
+              <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Ongeldige koppelcode</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
               <Link href="/dashboard" className="mt-5 inline-block text-sm text-amber-600 hover:underline">
                 Naar dashboard
               </Link>
             </>
           ) : invite ? (
             <>
-              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Uitnodiging</p>
-              <h1 className="text-lg font-bold text-gray-900 mb-1">{invite.org_name}</h1>
-              <p className="text-sm text-gray-500 mb-6">
-                Rol: <span className="font-medium text-gray-700">
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Uitnodiging</p>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">{invite.org_name}</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Rol: <span className="font-medium text-gray-700 dark:text-gray-300">
                   {invite.role === 'admin' ? 'Beheerder' : 'Lid'}
                 </span>
               </p>
 
               {session ? (
                 <>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Ingelogd als <span className="font-medium text-gray-900">{session.username}</span>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Ingelogd als <span className="font-medium text-gray-900 dark:text-gray-100">{session.username}</span>
                   </p>
                   <button
                     onClick={join}
@@ -88,7 +88,7 @@ export default function JoinPage() {
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Log in of maak een account aan om deel te nemen.
                   </p>
                   <div className="flex flex-col gap-2">
@@ -100,7 +100,7 @@ export default function JoinPage() {
                     </Link>
                     <Link
                       href={`/login?invite=${code}`}
-                      className="w-full border border-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors text-center"
+                      className="w-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium py-2.5 rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center"
                     >
                       Inloggen
                     </Link>

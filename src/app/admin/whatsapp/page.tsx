@@ -94,21 +94,21 @@ export default function AdminWhatsappPage() {
   return (
     <div className="max-w-xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin" className="text-gray-400 hover:text-gray-700 text-sm">← Admin</Link>
-        <h1 className="text-lg font-semibold text-gray-900">WhatsApp beheer</h1>
+        <Link href="/admin" className="text-gray-400 dark:text-gray-500 hover:text-gray-700 text-sm">← Admin</Link>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">WhatsApp beheer</h1>
       </div>
 
       {/* Status kaart */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6 space-y-4">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-700">Verbindingsstatus</h2>
-          <button onClick={load} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">Verbindingsstatus</h2>
+          <button onClick={load} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 transition-colors">
             ↻ Vernieuwen
           </button>
         </div>
 
         {!status ? (
-          <p className="text-sm text-gray-400">Laden…</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Laden…</p>
         ) : (
           <>
             <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[status.status]}`}>
@@ -117,13 +117,13 @@ export default function AdminWhatsappPage() {
 
             {/* Foutmelding */}
             {status.error && (
-              <div className="bg-red-50 border border-red-100 rounded-lg p-3">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg p-3">
                 <p className="text-xs font-semibold text-red-600 mb-1">Foutmelding:</p>
                 <p className="text-xs text-red-600 font-mono break-all">{status.error}</p>
                 {status.error.includes('Chrome') && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     Voer dit uit in de terminal om Chrome te installeren:<br />
-                    <span className="font-mono bg-gray-100 px-1 rounded">npx puppeteer browsers install chrome</span>
+                    <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">npx puppeteer browsers install chrome</span>
                   </p>
                 )}
               </div>
@@ -131,31 +131,31 @@ export default function AdminWhatsappPage() {
 
             {/* Verbonden nummer */}
             {status.phoneNumber && (
-              <p className="text-sm text-gray-600">
-                Gekoppeld nummer: <span className="font-mono font-medium text-gray-900">{status.phoneNumber}</span>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Gekoppeld nummer: <span className="font-mono font-medium text-gray-900 dark:text-gray-100">{status.phoneNumber}</span>
               </p>
             )}
 
             {/* QR-code */}
             {status.status === 'qr_needed' && (
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Open WhatsApp op de koppeltelefoon →{' '}
                   <strong>Instellingen → Gekoppelde apparaten → Apparaat koppelen</strong>
                 </p>
                 {status.qr ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={status.qr} alt="WhatsApp QR code" className="w-52 h-52 border border-gray-200 rounded-xl" />
+                  <img src={status.qr} alt="WhatsApp QR code" className="w-52 h-52 border border-gray-200 dark:border-gray-700 rounded-xl" />
                 ) : (
-                  <p className="text-sm text-gray-400 animate-pulse">QR-code genereren…</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">QR-code genereren…</p>
                 )}
-                <p className="text-xs text-gray-400">De QR-code verloopt na ±20 seconden. De pagina ververst automatisch.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">De QR-code verloopt na ±20 seconden. De pagina ververst automatisch.</p>
               </div>
             )}
 
             {/* Opstarten bericht */}
             {status.status === 'initializing' && (
-              <p className="text-sm text-gray-500 animate-pulse">
+              <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">
                 Chrome en WhatsApp worden gestart… dit duurt 15–30 seconden.
               </p>
             )}
@@ -166,7 +166,7 @@ export default function AdminWhatsappPage() {
                 <button
                   onClick={init}
                   disabled={initializing}
-                  className="bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  className="bg-gray-900 dark:bg-white hover:bg-gray-700 disabled:opacity-50 text-white dark:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
                 >
                   {initializing ? 'Bezig…' : '▶ Verbinden'}
                 </button>
@@ -175,7 +175,7 @@ export default function AdminWhatsappPage() {
                 <button
                   onClick={disconnect}
                   disabled={disconnecting}
-                  className="border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  className="border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
                 >
                   {disconnecting ? 'Bezig…' : 'Ontkoppelen'}
                 </button>
@@ -186,21 +186,21 @@ export default function AdminWhatsappPage() {
       </div>
 
       {/* Testbericht */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h2 className="text-sm font-medium text-gray-700">Testbericht versturen</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-3">
+        <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">Testbericht versturen</h2>
         <input
           type="tel"
           value={testPhone}
           onChange={e => setTestPhone(e.target.value)}
           placeholder="+31612345678"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+          className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
         />
         <textarea
           value={testMsg}
           onChange={e => setTestMsg(e.target.value)}
           placeholder="Testbericht (optioneel)"
           rows={2}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+          className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
         />
         {testResult && (
           <p className={`text-sm ${testResult.startsWith('✓') ? 'text-green-600' : 'text-red-500'}`}>
@@ -210,12 +210,12 @@ export default function AdminWhatsappPage() {
         <button
           onClick={sendTest}
           disabled={testLoading || !testPhone.trim() || status?.status !== 'connected'}
-          className="w-full bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+          className="w-full bg-gray-900 dark:bg-white hover:bg-gray-700 disabled:opacity-50 text-white dark:text-gray-900 font-medium py-2.5 rounded-lg text-sm transition-colors"
         >
           {testLoading ? 'Versturen…' : 'Verstuur testbericht'}
         </button>
         {status?.status !== 'connected' && (
-          <p className="text-xs text-gray-400 text-center">WhatsApp moet eerst verbonden zijn</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center">WhatsApp moet eerst verbonden zijn</p>
         )}
       </div>
     </div>

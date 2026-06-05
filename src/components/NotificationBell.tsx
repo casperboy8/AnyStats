@@ -68,21 +68,21 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-amber-100 z-50 overflow-hidden">
-          <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
+        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-amber-100 dark:border-gray-800 z-50 overflow-hidden">
+          <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-100 dark:border-gray-800">
             <h3 className="font-semibold text-amber-900">Notificaties</h3>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="px-4 py-6 text-center text-gray-400 text-sm">Geen notificaties</p>
+              <p className="px-4 py-6 text-center text-gray-400 dark:text-gray-500 text-sm">Geen notificaties</p>
             ) : (
               notifications.map(n => (
                 <div
                   key={n.id}
-                  className={`px-4 py-3 border-b border-gray-50 text-sm ${!n.is_read ? 'bg-amber-50' : ''}`}
+                  className={`px-4 py-3 border-b border-gray-50 dark:border-gray-800 text-sm ${!n.is_read ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`}
                 >
-                  <p className="text-gray-800">{n.message}</p>
-                  <p className="text-gray-400 text-xs mt-1">
+                  <p className="text-gray-800 dark:text-gray-200">{n.message}</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
                     {new Date(n.created_at).toLocaleString('nl-NL')}
                   </p>
                 </div>

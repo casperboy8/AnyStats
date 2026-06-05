@@ -61,56 +61,56 @@ export default function AdminOrganisationsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
         <Link href="/admin" className="hover:text-amber-600">Admin</Link>
         <span>/</span>
         <span>Groepen</span>
       </div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Groepen ({orgs.length})</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Groepen ({orgs.length})</h1>
 
       {/* Aanmaken */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Nieuwe groep aanmaken</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Nieuwe groep aanmaken</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Naam *</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Naam *</label>
             <input
               type="text"
               value={form.name}
               onChange={e => handleName(e.target.value)}
               placeholder="Bijv. Team Rood"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Slug (URL) *</label>
-            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-400">
-              <span className="px-2 py-2 text-xs text-gray-400 bg-gray-50 border-r border-gray-200 shrink-0">/org/</span>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Slug (URL) *</label>
+            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-400">
+              <span className="px-2 py-2 text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0">/org/</span>
               <input
                 type="text"
                 value={form.slug}
                 onChange={e => { setSlugManual(true); setForm(f => ({ ...f, slug: e.target.value })); }}
                 placeholder="team-rood"
-                className="flex-1 px-3 py-2 text-sm focus:outline-none"
+                className="flex-1 px-3 py-2 text-sm focus:outline-none dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Beschrijving</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Beschrijving</label>
             <input
               type="text"
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               placeholder="Optioneel..."
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Eigenaar (owner)</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Eigenaar (owner)</label>
             <select
               value={form.owner_id}
               onChange={e => setForm(f => ({ ...f, owner_id: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-800 dark:text-gray-100"
             >
               <option value="">Kies een gebruiker...</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.username}</option>)}
@@ -129,20 +129,20 @@ export default function AdminOrganisationsPage() {
 
       {/* Overzicht */}
       {orgs.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-xl p-8 text-center text-gray-400 text-sm">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-8 text-center text-gray-400 dark:text-gray-500 text-sm">
           Nog geen groepen aangemaakt.
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-3 px-4 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             <div>Naam</div>
             <div>Slug</div>
             <div className="text-right">Acties</div>
           </div>
           {orgs.map(org => (
-            <div key={org.id} className="grid grid-cols-3 px-4 py-3 border-b border-gray-50 last:border-0 items-center">
-              <div className="font-medium text-gray-900 text-sm">{org.name}</div>
-              <div className="text-gray-400 text-sm font-mono">{org.slug}</div>
+            <div key={org.id} className="grid grid-cols-3 px-4 py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center">
+              <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{org.name}</div>
+              <div className="text-gray-400 dark:text-gray-500 text-sm font-mono">{org.slug}</div>
               <div className="flex justify-end gap-3">
                 <Link href={`/org/${org.slug}/members`} className="text-xs text-amber-600 hover:text-amber-800 transition-colors">
                   Leden

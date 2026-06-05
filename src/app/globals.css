@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: dark: variants reageren op .dark op <html> */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f9f9f8;
   --foreground: #1a1a1a;
+}
+
+.dark {
+  --background: #111113;
+  --foreground: #f4f4f5;
 }
 
 @theme inline {

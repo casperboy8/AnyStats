@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import NotificationBell from './NotificationBell';
+import { useTheme } from './ThemeProvider';
 
 type OrgItem = { id: string; name: string; slug: string; role: string };
 
@@ -15,6 +16,7 @@ type Props = {
 export default function Navbar({ user, orgs }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [orgOpen, setOrgOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -61,8 +63,8 @@ export default function Navbar({ user, orgs }: Props) {
             href={`/org/${currentSlug}`}
             onClick={() => setMenuOpen(false)}
             className={mobile
-              ? `block px-4 py-3 text-sm font-medium border-b border-gray-50 ${pathname === `/org/${currentSlug}` ? 'text-amber-600' : 'text-gray-700'}`
-              : `text-sm transition-colors ${pathname === `/org/${currentSlug}` ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`
+              ? `block px-4 py-3 text-sm font-medium border-b border-gray-50 ${pathname === `/org/${currentSlug}` ? 'text-amber-600' : 'text-gray-700 dark:text-gray-300'}`
+              : `text-sm transition-colors ${pathname === `/org/${currentSlug}` ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
             }
           >
             Dashboard
@@ -72,8 +74,8 @@ export default function Navbar({ user, orgs }: Props) {
             href={`/org/${currentSlug}/leaderboard`}
             onClick={() => setMenuOpen(false)}
             className={mobile
-              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === `/org/${currentSlug}/leaderboard` ? 'text-amber-600 font-medium' : 'text-gray-700'}`
-              : `text-sm transition-colors ${pathname === `/org/${currentSlug}/leaderboard` ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`
+              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === `/org/${currentSlug}/leaderboard` ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+              : `text-sm transition-colors ${pathname === `/org/${currentSlug}/leaderboard` ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
             }
           >
             Klassement
@@ -84,8 +86,8 @@ export default function Navbar({ user, orgs }: Props) {
               href={`/org/${currentSlug}/members`}
               onClick={() => setMenuOpen(false)}
               className={mobile
-                ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === `/org/${currentSlug}/members` ? 'text-amber-600 font-medium' : 'text-gray-700'}`
-                : `text-sm transition-colors ${pathname === `/org/${currentSlug}/members` ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`
+                ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === `/org/${currentSlug}/members` ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+                : `text-sm transition-colors ${pathname === `/org/${currentSlug}/members` ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
               }
             >
               Leden
@@ -97,8 +99,8 @@ export default function Navbar({ user, orgs }: Props) {
               href={`/org/${currentSlug}/settings`}
               onClick={() => setMenuOpen(false)}
               className={mobile
-                ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === `/org/${currentSlug}/settings` ? 'text-amber-600 font-medium' : 'text-gray-700'}`
-                : `text-sm transition-colors ${pathname === `/org/${currentSlug}/settings` ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`
+                ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === `/org/${currentSlug}/settings` ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+                : `text-sm transition-colors ${pathname === `/org/${currentSlug}/settings` ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
               }
               title="Instellingen"
             >
@@ -117,8 +119,8 @@ export default function Navbar({ user, orgs }: Props) {
             href="/dashboard"
             onClick={() => setMenuOpen(false)}
             className={mobile
-              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-700'}`
-              : `text-sm transition-colors ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`
+              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+              : `text-sm transition-colors ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
             }
           >
             Dashboard
@@ -127,8 +129,8 @@ export default function Navbar({ user, orgs }: Props) {
             href="/leaderboard"
             onClick={() => setMenuOpen(false)}
             className={mobile
-              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-700'}`
-              : `text-sm transition-colors ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`
+              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+              : `text-sm transition-colors ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
             }
           >
             Klassement
@@ -141,8 +143,8 @@ export default function Navbar({ user, orgs }: Props) {
           href="/admin"
           onClick={() => setMenuOpen(false)}
           className={mobile
-            ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname.startsWith('/admin') ? 'text-amber-600 font-medium' : 'text-gray-700'}`
-            : `text-sm transition-colors ${pathname.startsWith('/admin') ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`
+            ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname.startsWith('/admin') ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+            : `text-sm transition-colors ${pathname.startsWith('/admin') ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
           }
         >
           Admin
@@ -152,7 +154,7 @@ export default function Navbar({ user, orgs }: Props) {
   );
 
   return (
-    <nav className="bg-white border-b border-gray-100">
+    <nav className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-12">
 
         {/* ── Linkerkant ── */}
@@ -176,7 +178,7 @@ export default function Navbar({ user, orgs }: Props) {
             <div className="relative hidden sm:block" ref={dropdownRef}>
               <button
                 onClick={() => setOrgOpen(v => !v)}
-                className={`flex items-center gap-1 text-sm transition-colors ${currentOrg ? 'text-amber-600 font-medium' : 'text-gray-500 hover:text-gray-800'}`}
+                className={`flex items-center gap-1 text-sm transition-colors ${currentOrg ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
               >
                 {currentOrg ? currentOrg.name : 'Groepen'}
                 <svg className={`w-3 h-3 transition-transform ${orgOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,13 +187,13 @@ export default function Navbar({ user, orgs }: Props) {
               </button>
 
               {orgOpen && (
-                <div className="absolute top-full left-0 mt-1.5 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+                <div className="absolute top-full left-0 mt-1.5 w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1">
                   {orgs.map(org => (
                     <Link
                       key={org.id}
                       href={`/org/${org.slug}`}
                       onClick={() => setOrgOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${org.slug === currentSlug ? 'text-amber-600 font-medium' : 'text-gray-700'}`}
+                      className={`flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${org.slug === currentSlug ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`}
                     >
                       <span className="truncate">{org.name}</span>
                       {org.slug === currentSlug && (
@@ -202,8 +204,8 @@ export default function Navbar({ user, orgs }: Props) {
                     </Link>
                   ))}
                   {isOwnerAnywhere && (
-                    <div className="border-t border-gray-100 mt-1 pt-1">
-                      <Link href="/organisations" onClick={() => setOrgOpen(false)} className="block px-3 py-2 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+                    <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                      <Link href="/organisations" onClick={() => setOrgOpen(false)} className="block px-3 py-2 text-xs text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                         Alle groepen →
                       </Link>
                       <Link href="/organisations/new" onClick={() => setOrgOpen(false)} className="block px-3 py-2 text-xs text-amber-600 hover:bg-amber-50 transition-colors font-medium">
@@ -224,20 +226,37 @@ export default function Navbar({ user, orgs }: Props) {
 
         {/* ── Rechterkant ── */}
         <div className="flex items-center gap-2">
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label={theme === 'dark' ? 'Lichte modus' : 'Donkere modus'}
+            title={theme === 'dark' ? 'Lichte modus' : 'Donkere modus'}
+          >
+            {theme === 'dark' ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+              </svg>
+            )}
+          </button>
           <NotificationBell />
 
           {/* Desktop: gebruikersnaam + uitloggen */}
           <div className="hidden sm:flex items-center gap-2">
             <Link
               href="/profile"
-              className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+              className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               title="Profiel"
             >
               {user.username}
             </Link>
             <button
               onClick={logout}
-              className="text-xs text-gray-400 hover:text-gray-700 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+              className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-2 py-1 rounded hover:bg-gray-100"
             >
               Uitloggen
             </button>
@@ -245,7 +264,7 @@ export default function Navbar({ user, orgs }: Props) {
 
           {/* Mobiel: hamburger */}
           <button
-            className="sm:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+            className="sm:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             onClick={() => setMenuOpen(v => !v)}
             aria-label="Menu"
           >
@@ -264,7 +283,7 @@ export default function Navbar({ user, orgs }: Props) {
 
       {/* ── Mobiel menu ── */}
       {menuOpen && (
-        <div className="sm:hidden bg-white border-t border-gray-100 shadow-lg">
+        <div className="sm:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-lg">
           {/* Org-switcher in mobiel menu */}
           {showSwitcher && (
             <div className="px-4 py-2 border-b border-gray-50">
@@ -299,7 +318,7 @@ export default function Navbar({ user, orgs }: Props) {
           </div>
 
           {/* Profiel + Uitloggen */}
-          <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-between">
+          <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
             <Link href="/profile" onClick={() => setMenuOpen(false)} className="text-sm text-gray-600 font-medium">
               {user.username}
             </Link>
