@@ -33,7 +33,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     JOIN users u_receiver ON a.receiver_id = u_receiver.id
     JOIN organisation_members om_giver    ON om_giver.user_id    = a.giver_id    AND om_giver.organisation_id    = ?
     JOIN organisation_members om_receiver ON om_receiver.user_id = a.receiver_id AND om_receiver.organisation_id = ?
-    WHERE a.status = 'completed'
+    WHERE a.status NOT IN ('completed', 'pending')
     GROUP BY a.giver_id, a.receiver_id
     ORDER BY count DESC
   `).all(org.id, org.id);

@@ -37,7 +37,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       other_om.organisation_id = ? AND
       other_om.user_id = CASE WHEN a.giver_id = u.id THEN a.receiver_id ELSE a.giver_id END
     GROUP BY u.id
-    ORDER BY ontvangen_actief DESC, ontvangen_totaal DESC
+    ORDER BY ontvangen_totaal DESC, ontvangen_actief DESC
   `).all(org.id, org.id);
 
   return NextResponse.json(stats);

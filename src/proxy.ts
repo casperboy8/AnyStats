@@ -6,8 +6,8 @@ const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) throw new Error('JWT_SECRET environment variable is not set');
 const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
-const publicPaths = ['/login', '/register', '/join'];
-const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapid-public-key', '/api/invite/'];
+const publicPaths = ['/login', '/register'];
+const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapid-public-key', '/api/invite/', '/join'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

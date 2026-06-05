@@ -22,19 +22,63 @@ type Pair = {
   count: number;
 };
 
+type SessionUser = {
+  id: number;
+  username: string;
+};
+
+const TOP_N = 5;
+
+function StatRow({ s, rank, highlight }: { s: Stat; rank: number; highlight?: boolean }) {
+  const i = rank - 1;
+  return (
+    <div
+      className={`grid grid-cols-3 sm:grid-cols-4 px-4 py-3.5 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center
+        ${highlight ? 'bg-amber-50 dark:bg-amber-950/20' : ''}`}
+    >
+      <div className="col-span-2 flex items-center gap-3 min-w-0">
+        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0
+          ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : i === 2 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
+          {rank}
+        </span>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className={`font-medium text-sm truncate ${getAchievementTier(s.ontvangen_totaal_global)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>
+            {s.username}
+          </span>
+          <AchievementBadge tier={getAchievementTier(s.ontvangen_totaal_global)} />
+        </div>
+      </div>
+      <div className="hidden sm:block text-center">
+        <span className={`text-sm font-medium ${s.ontvangen_actief > 0 ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`}>
+          {s.ontvangen_actief > 0 ? s.ontvangen_actief : '—'}
+        </span>
+      </div>
+      <div className="text-center">
+        <span className={`text-sm ${s.ontvangen_totaal > 0 ? 'text-gray-700 dark:text-gray-300 font-medium' : 'text-gray-300 dark:text-gray-600'}`}>
+          {s.ontvangen_totaal > 0 ? s.ontvangen_totaal : '—'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function OrgLeaderboardPage() {
   const { slug } = useParams<{ slug: string }>();
   const [stats, setStats] = useState<Stat[]>([]);
   const [pairs, setPairs] = useState<Pair[]>([]);
+  const [me, setMe] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/org/${slug}/leaderboard`).then(r => r.json()),
       fetch(`/api/org/${slug}/pairs`).then(r => r.json()),
-    ]).then(([leaderboard, pairsData]) => {
+      fetch('/api/auth/me').then(r => r.ok ? r.json() : null),
+    ]).then(([leaderboard, pairsData, session]) => {
       if (Array.isArray(leaderboard)) setStats(leaderboard);
       if (Array.isArray(pairsData)) setPairs(pairsData);
+      if (session?.id) setMe(session);
       setLoading(false);
     });
   }, [slug]);
@@ -46,6 +90,11 @@ export default function OrgLeaderboardPage() {
       </div>
     );
   }
+
+  const top5 = stats.slice(0, TOP_N);
+  const myRank = me ? stats.findIndex(s => s.id === me.id) : -1;
+  const myStat = myRank >= 0 ? stats[myRank] : null;
+  const myIsInTop = myRank >= 0 && myRank < TOP_N;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -64,35 +113,41 @@ export default function OrgLeaderboardPage() {
 
         {stats.length === 0 ? (
           <div className="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">Nog geen data</div>
-        ) : stats.map((s, i) => (
-          <div
-            key={s.id}
-            className="grid grid-cols-3 sm:grid-cols-4 px-4 py-3.5 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center"
+        ) : expanded ? (
+          stats.map((s, i) => (
+            <StatRow key={s.id} s={s} rank={i + 1} highlight={s.id === me?.id} />
+          ))
+        ) : (
+          <>
+            {top5.map((s, i) => (
+              <StatRow key={s.id} s={s} rank={i + 1} highlight={s.id === me?.id} />
+            ))}
+
+            {/* Eigen positie buiten top 5 */}
+            {!myIsInTop && myStat && (
+              <>
+                <div className="flex items-center gap-2 px-4 py-1.5 border-b border-gray-50 dark:border-gray-800">
+                  <div className="flex-1 border-t border-dashed border-gray-200 dark:border-gray-700" />
+                  <span className="text-[10px] text-gray-300 dark:text-gray-600 font-medium shrink-0">
+                    {stats.length > TOP_N + 1 ? `${stats.length - TOP_N - 1} anderen` : ''}
+                  </span>
+                  <div className="flex-1 border-t border-dashed border-gray-200 dark:border-gray-700" />
+                </div>
+                <StatRow s={myStat} rank={myRank + 1} highlight />
+              </>
+            )}
+          </>
+        )}
+
+        {/* Toon alles / Minder knop */}
+        {stats.length > TOP_N && (
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="w-full px-4 py-2.5 text-xs font-medium text-amber-600 hover:text-amber-500 border-t border-gray-100 dark:border-gray-800 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors"
           >
-            <div className="col-span-2 flex items-center gap-3 min-w-0">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0
-                ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : i === 2 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
-                {i + 1}
-              </span>
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className={`font-medium text-sm truncate ${getAchievementTier(s.ontvangen_totaal_global)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>
-                  {s.username}
-                </span>
-                <AchievementBadge tier={getAchievementTier(s.ontvangen_totaal_global)} />
-              </div>
-            </div>
-            <div className="hidden sm:block text-center">
-              <span className={`text-sm font-medium ${s.ontvangen_actief > 0 ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`}>
-                {s.ontvangen_actief > 0 ? s.ontvangen_actief : '—'}
-              </span>
-            </div>
-            <div className="text-center">
-              <span className={`text-sm ${s.ontvangen_totaal > 0 ? 'text-gray-700 dark:text-gray-300 font-medium' : 'text-gray-300 dark:text-gray-600'}`}>
-                {s.ontvangen_totaal > 0 ? s.ontvangen_totaal : '—'}
-              </span>
-            </div>
-          </div>
-        ))}
+            {expanded ? `Minder tonen` : `Toon alle ${stats.length} leden`}
+          </button>
+        )}
       </div>
 
       {/* Totaalkaarten */}
@@ -119,14 +174,14 @@ export default function OrgLeaderboardPage() {
             <div className="grid grid-cols-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
               <div>Gever</div>
               <div>Ontvanger</div>
-              <div className="text-right">Gedronken</div>
+              <div className="text-right">Openstaand</div>
             </div>
             {pairs.map((p, i) => (
               <div key={i} className="grid grid-cols-3 px-4 py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center">
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{p.giver_username}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 truncate">{p.receiver_username}</div>
                 <div className="text-right">
-                  <span className="text-sm font-semibold text-amber-600">{p.count}</span>
+                  <span className={`text-sm font-semibold ${p.count > 0 ? 'text-amber-500' : 'text-gray-400'}`}>{p.count}</span>
                 </div>
               </div>
             ))}
