@@ -72,6 +72,8 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+       <div className="overflow-x-auto">
+        <div className="min-w-[560px]">
         <div className="grid grid-cols-4 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
           <div>Naam</div>
           <div>Email</div>
@@ -102,6 +104,8 @@ export default function AdminUsersPage() {
             </div>
           </div>
         ))}
+        </div>
+       </div>
       </div>
 
       <Modal open={newModal} onClose={() => { setNewModal(false); setError(''); }} title="Gebruiker aanmaken">

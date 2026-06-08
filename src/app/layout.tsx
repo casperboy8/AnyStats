@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -19,6 +19,14 @@ export const metadata: Metadata = {
   },
 };
 
+// Kleurt de mobiele browser-balk mee met de achtergrond (licht/donker)
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f9f9f8' },
+    { media: '(prefers-color-scheme: dark)', color: '#0e0e11' },
+  ],
+};
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   const orgs = session ? getUserOrgs(session.id) : [];
@@ -35,10 +43,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           })()
         `}} />
       </head>
-      <body className="min-h-full flex flex-col bg-[#f9f9f8] dark:bg-[#111113]">
+      <body className="min-h-full flex flex-col bg-[#f9f9f8] dark:bg-[#0e0e11]">
         <ThemeProvider>
           <Navbar user={session} orgs={orgs} />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-16 sm:pb-0">{children}</main>
         </ThemeProvider>
       </body>
     </html>

@@ -117,7 +117,7 @@ export default function AdminAnytimersPage() {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {[['all', 'Alle'], ['active', 'Actief'], ['pending', 'Wachtend'], ['inzetten_pending', 'Ingezet'], ['completed', 'Voltooid']].map(([val, label]) => (
           <button
             key={val}
@@ -130,6 +130,8 @@ export default function AdminAnytimersPage() {
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+       <div className="overflow-x-auto">
+        <div className="min-w-[640px]">
         <div className="grid grid-cols-5 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
           <div>Van</div>
           <div>Aan</div>
@@ -164,6 +166,8 @@ export default function AdminAnytimersPage() {
             </div>
           ))
         )}
+        </div>
+       </div>
       </div>
 
       <Modal open={newModal} onClose={() => { setNewModal(false); setError(''); }} title="Anytimer aanmaken">

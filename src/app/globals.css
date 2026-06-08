@@ -9,14 +9,33 @@
 }
 
 .dark {
-  --background: #111113;
-  --foreground: #f4f4f5;
+  /* Slightly warm, soft near-black instead of cold pure black.
+     Sits just below zinc-900 so cards/surfaces elevate above it. */
+  --background: #0e0e11;
+  --foreground: #ededee;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
+}
+
+/* Remap the default `gray-*` palette (cool, blue-tinted) to the warmer,
+   near-neutral `zinc` scale. Every existing `*-gray-NNN` utility in the app
+   picks this up, so dark mode loses its harsh cold cast app-wide. */
+@theme {
+  --color-gray-50: oklch(98.5% 0 0);
+  --color-gray-100: oklch(96.7% 0.001 286.375);
+  --color-gray-200: oklch(92% 0.004 286.32);
+  --color-gray-300: oklch(87.1% 0.006 286.286);
+  --color-gray-400: oklch(70.5% 0.015 286.067);
+  --color-gray-500: oklch(55.2% 0.016 285.938);
+  --color-gray-600: oklch(44.2% 0.017 285.786);
+  --color-gray-700: oklch(37% 0.013 285.805);
+  --color-gray-800: oklch(27.4% 0.006 286.033);
+  --color-gray-900: oklch(21% 0.006 285.885);
+  --color-gray-950: oklch(14.1% 0.005 285.823);
 }
 
 body {

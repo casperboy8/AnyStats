@@ -134,6 +134,8 @@ export default function AdminOrganisationsPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+         <div className="overflow-x-auto">
+          <div className="min-w-[480px]">
           <div className="grid grid-cols-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             <div>Naam</div>
             <div>Slug</div>
@@ -156,6 +158,8 @@ export default function AdminOrganisationsPage() {
               </div>
             </div>
           ))}
+          </div>
+         </div>
         </div>
       )}
     </div>

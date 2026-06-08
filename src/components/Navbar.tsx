@@ -153,7 +153,33 @@ export default function Navbar({ user, orgs }: Props) {
     </>
   );
 
+  // ── Mobiele onderbalk-tabs (max 3 directe + "Meer") ──
+  const iconHome = (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10" /></svg>
+  );
+  const iconTrophy = (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 21h8m-4-4v4m-5-17h10v4a5 5 0 01-10 0V4zm10 1h3v2a3 3 0 01-3 3m-10-5H4v2a3 3 0 003 3" /></svg>
+  );
+  const iconUsers = (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 20h5v-1a4 4 0 00-4-4h-1m-6 5H2v-1a4 4 0 014-4h4a4 4 0 014 4v1zm-2-9a3 3 0 11-6 0 3 3 0 016 0zm7-1a3 3 0 11-4 0" /></svg>
+  );
+  const iconMore = (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+  );
+
+  const bottomTabs: { href: string; label: string; active: boolean; icon: React.ReactNode }[] = currentSlug
+    ? [
+        { href: `/org/${currentSlug}`, label: 'Dashboard', active: pathname === `/org/${currentSlug}`, icon: iconHome },
+        { href: `/org/${currentSlug}/leaderboard`, label: 'Klassement', active: pathname === `/org/${currentSlug}/leaderboard`, icon: iconTrophy },
+        ...(canSeeMembers ? [{ href: `/org/${currentSlug}/members`, label: 'Leden', active: pathname === `/org/${currentSlug}/members`, icon: iconUsers }] : []),
+      ]
+    : [
+        { href: '/dashboard', label: 'Dashboard', active: pathname === '/dashboard', icon: iconHome },
+        { href: '/leaderboard', label: 'Klassement', active: pathname === '/leaderboard', icon: iconTrophy },
+      ];
+
   return (
+    <>
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-12">
 
@@ -261,33 +287,47 @@ export default function Navbar({ user, orgs }: Props) {
               Uitloggen
             </button>
           </div>
-
-          {/* Mobiel: hamburger */}
-          <button
-            className="sm:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label="Menu"
-          >
-            {menuOpen ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
         </div>
       </div>
 
-      {/* ── Mobiel menu ── */}
-      {menuOpen && (
-        <div className="sm:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-lg">
-          {/* Org-switcher in mobiel menu */}
+    </nav>
+
+    {/* ── Mobiele onderbalk (tab bar) ── */}
+    <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-t border-gray-100 dark:border-gray-800 flex pb-[env(safe-area-inset-bottom)]">
+      {bottomTabs.map(tab => (
+        <Link
+          key={tab.href}
+          href={tab.href}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${tab.active ? 'text-amber-600' : 'text-gray-400 dark:text-gray-500'}`}
+        >
+          {tab.icon}
+          <span>{tab.label}</span>
+        </Link>
+      ))}
+      <button
+        onClick={() => setMenuOpen(true)}
+        aria-label="Meer"
+        className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${menuOpen ? 'text-amber-600' : 'text-gray-400 dark:text-gray-500'}`}
+      >
+        {iconMore}
+        <span>Meer</span>
+      </button>
+    </nav>
+
+    {/* ── "Meer" bottom sheet ── */}
+    {menuOpen && (
+      <div className="sm:hidden fixed inset-0 z-50" onClick={() => setMenuOpen(false)}>
+        <div className="absolute inset-0 bg-black/40" />
+        <div
+          className="absolute bottom-0 inset-x-0 bg-white dark:bg-gray-900 rounded-t-2xl border-t border-gray-100 dark:border-gray-800 p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 shadow-2xl"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="mx-auto h-1 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
+
+          {/* Org-switcher */}
           {showSwitcher && (
-            <div className="px-4 py-2 border-b border-gray-50">
-              <p className="text-xs text-gray-400 mb-1.5">Groep</p>
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">Groep</p>
               <div className="flex flex-wrap gap-1.5">
                 {orgs.map(org => (
                   <Link
@@ -296,15 +336,15 @@ export default function Navbar({ user, orgs }: Props) {
                     onClick={() => setMenuOpen(false)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                       org.slug === currentSlug
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
                     {org.name}
                   </Link>
                 ))}
                 {isOwnerAnywhere && (
-                  <Link href="/organisations/new" onClick={() => setMenuOpen(false)} className="px-3 py-1.5 rounded-full text-sm text-amber-600 bg-amber-50 hover:bg-amber-100 transition-colors">
+                  <Link href="/organisations/new" onClick={() => setMenuOpen(false)} className="px-3 py-1.5 rounded-full text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 transition-colors">
                     + Nieuw
                   </Link>
                 )}
@@ -312,25 +352,38 @@ export default function Navbar({ user, orgs }: Props) {
             </div>
           )}
 
-          {/* Nav-links */}
-          <div>
-            {orgLinks(true)}
-          </div>
-
-          {/* Profiel + Uitloggen */}
-          <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
-            <Link href="/profile" onClick={() => setMenuOpen(false)} className="text-sm text-gray-600 font-medium">
-              {user.username}
+          {/* Secundaire links */}
+          <div className="grid grid-cols-1 divide-y divide-gray-100 dark:divide-gray-800 border-y border-gray-100 dark:border-gray-800 -mx-1">
+            <Link href="/profile" onClick={() => setMenuOpen(false)} className="px-1 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Profiel ({user.username})
             </Link>
+            {isCurrentOrgOwner && currentSlug && (
+              <Link href={`/org/${currentSlug}/settings`} onClick={() => setMenuOpen(false)} className="px-1 py-3 text-sm text-gray-700 dark:text-gray-300">
+                Instellingen
+              </Link>
+            )}
+            {user.role === 'admin' && (
+              <Link href="/admin" onClick={() => setMenuOpen(false)} className="px-1 py-3 text-sm text-gray-700 dark:text-gray-300">
+                Admin
+              </Link>
+            )}
             <button
-              onClick={() => { setMenuOpen(false); logout(); }}
-              className="text-sm text-red-400 hover:text-red-600 transition-colors"
+              onClick={() => { toggleTheme(); }}
+              className="px-1 py-3 text-sm text-gray-700 dark:text-gray-300 text-left flex items-center justify-between"
             >
-              Uitloggen
+              <span>{theme === 'dark' ? 'Lichte modus' : 'Donkere modus'}</span>
             </button>
           </div>
+
+          <button
+            onClick={() => { setMenuOpen(false); logout(); }}
+            className="w-full py-2.5 text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
+          >
+            Uitloggen
+          </button>
         </div>
-      )}
-    </nav>
+      </div>
+    )}
+    </>
   );
 }
