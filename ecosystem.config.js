@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'anystats',
-      script: 'node_modules/.bin/next',
-      args: 'start',
+      script: 'start.sh',
+      interpreter: 'bash',
       cwd: '/var/www/anystats',
 
       // Geef Chrome 10 seconden om netjes af te sluiten (graceful shutdown)
