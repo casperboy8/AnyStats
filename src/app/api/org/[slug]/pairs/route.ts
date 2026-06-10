@@ -20,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     .get(org.id, session.id);
   if (!isMember) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
-  // Pairwise completed anytimers between org members only
+  // Pairwise active (accepted, not completed) anytimers between org members only
   const pairs = db.prepare(`
     SELECT
       u_giver.id   AS giver_id,

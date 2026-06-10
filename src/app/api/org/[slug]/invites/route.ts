@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { getOrgMembership, hasMinRole } from '@/lib/org';
-import type { Organisation, OrganisationInvite } from '@/lib/db';
+import type { Organisation } from '@/lib/db';
 import { randomUUID, randomBytes } from 'crypto';
 
 function generateCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const bytes = randomBytes(8);
-  return Array.from(bytes).map(b => chars[b % chars.length]).join('').substring(0, 8);
+  // Verwerp bytes boven het grootste veelvoud van 36 om modulo-bias te vermijden
+  const limit = 256 - (256 % chars.length);
+  let code = '';
+  while (code.length < 8) {
+    for (const b of randomBytes(16)) {
+      if (b < limit) code += chars[b % chars.length];
+      if (code.length === 8) break;
+    }
+  }
+  return code;
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {

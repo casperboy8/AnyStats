@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone Node-debugscript, geen onderdeel van de app
+    "db-viewer.js",
   ]),
 ]);
 

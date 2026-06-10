@@ -16,19 +16,12 @@ export type WhatsappStatus = 'initializing' | 'qr_needed' | 'connected' | 'disco
 
 // Singleton state — global zodat hot reload in dev de client niet herstelt
 declare global {
-  // eslint-disable-next-line no-var
   var __wa_client: Client | undefined;
-  // eslint-disable-next-line no-var
   var __wa_status: WhatsappStatus;
-  // eslint-disable-next-line no-var
   var __wa_qr: string | null;
-  // eslint-disable-next-line no-var
   var __wa_phone: string | null;
-  // eslint-disable-next-line no-var
   var __wa_init: boolean;
-  // eslint-disable-next-line no-var
   var __wa_error: string | null;
-  // eslint-disable-next-line no-var
   var __wa_shutdown_registered: boolean;
 }
 

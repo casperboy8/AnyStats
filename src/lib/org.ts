@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation';
 import { getSession } from './auth';
 import db from './db';
+import { ROLE_RANK, hasMinRole } from './permissions';
+import type { OrgRole } from './permissions';
 import type { Organisation, OrganisationMember } from './db';
 
-export type OrgRole = 'owner' | 'admin' | 'member';
-
-const ROLE_RANK: Record<OrgRole, number> = { owner: 3, admin: 2, member: 1 };
+// Her-export zodat bestaande imports vanuit '@/lib/org' blijven werken
+export { hasMinRole };
+export type { OrgRole };
 
 /**
  * Controleer of de ingelogde gebruiker lid is van de org met de gegeven slug.
@@ -62,8 +64,4 @@ export function getOrgMembership(orgId: string, userId: number) {
   return db
     .prepare('SELECT * FROM organisation_members WHERE organisation_id = ? AND user_id = ?')
     .get(orgId, userId) as OrganisationMember | undefined;
-}
-
-export function hasMinRole(membership: OrganisationMember, minRole: OrgRole): boolean {
-  return ROLE_RANK[membership.role] >= ROLE_RANK[minRole];
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { createSession } from '@/lib/auth';
+import { findValidInvite, redeemInvite } from '@/lib/invites';
 import { normalizePhone } from '@/lib/phone';
 import { checkRateLimit } from '@/lib/rate-limit';
 import type { User } from '@/lib/db';
@@ -57,19 +58,9 @@ export async function POST(req: NextRequest) {
 
   // Koppelcode verwerken
   if (invite_code) {
-    const invite = db.prepare(`
-      SELECT i.*, o.slug AS org_slug FROM organisation_invites i
-      JOIN organisations o ON o.id = i.organisation_id
-      WHERE i.code = ?
-    `).get(invite_code) as ({ org_slug: string; organisation_id: string; role: string; id: string; expires_at: string | null; max_uses: number | null; use_count: number } | undefined);
-
-    if (invite && !(invite.expires_at && new Date(invite.expires_at) < new Date())
-        && !(invite.max_uses !== null && invite.use_count >= invite.max_uses)) {
-      const { randomUUID } = await import('crypto');
-      db.prepare('INSERT INTO organisation_members (id, organisation_id, user_id, role) VALUES (?, ?, ?, ?)').run(
-        randomUUID(), invite.organisation_id, user.id, invite.role
-      );
-      db.prepare('UPDATE organisation_invites SET use_count = use_count + 1 WHERE id = ?').run(invite.id);
+    const invite = findValidInvite(invite_code);
+    if (invite) {
+      redeemInvite(invite, user.id);
       return NextResponse.json({ ok: true, redirect: `/org/${invite.org_slug}`, user: { id: user.id, username: user.username, role: user.role } });
     }
   }

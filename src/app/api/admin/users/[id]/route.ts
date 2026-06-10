@@ -26,9 +26,15 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Kan jezelf niet verwijderen' }, { status: 400 });
   }
 
-  db.prepare('DELETE FROM anytimers WHERE giver_id = ? OR receiver_id = ?').run(id, id);
-  db.prepare('DELETE FROM notifications WHERE user_id = ?').run(id);
-  db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  // Verwijder alles wat naar de gebruiker verwijst zonder ON DELETE CASCADE,
+  // anders blokkeert de foreign key constraint de delete.
+  db.transaction(() => {
+    db.prepare('DELETE FROM anytimers WHERE giver_id = ? OR receiver_id = ?').run(id, id);
+    db.prepare('DELETE FROM notifications WHERE user_id = ?').run(id);
+    db.prepare('DELETE FROM organisation_invites WHERE created_by = ?').run(id);
+    db.prepare('DELETE FROM videos WHERE uploaded_by = ?').run(id);
+    db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  })();
 
   return NextResponse.json({ ok: true });
 }

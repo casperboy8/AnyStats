@@ -39,6 +39,16 @@ export async function POST(req: NextRequest) {
   const receiver = db.prepare('SELECT id, username FROM users WHERE id = ?').get(receiver_id) as { id: number; username: string } | undefined;
   if (!receiver) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });
 
+  // Als een org is meegegeven: giver én receiver moeten daar lid van zijn
+  if (organisation_id) {
+    const memberCount = (db.prepare(
+      'SELECT COUNT(*) AS c FROM organisation_members WHERE organisation_id = ? AND user_id IN (?, ?)'
+    ).get(organisation_id, session.id, receiver_id) as { c: number }).c;
+    if (memberCount !== 2) {
+      return NextResponse.json({ error: 'Beide gebruikers moeten lid zijn van de organisatie' }, { status: 403 });
+    }
+  }
+
   const result = db.prepare(
     'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id) VALUES (?, ?, ?, ?, ?)'
   ).run(session.id, receiver_id, reason.trim(), 'pending', organisation_id ?? null);

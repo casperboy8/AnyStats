@@ -23,9 +23,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
   const proofUrl = `/api/uploads/${filename}`;
   const anytimer = db.prepare('SELECT giver_id, receiver_id FROM anytimers WHERE proof_url = ?').get(proofUrl) as Pick<Anytimer, 'giver_id' | 'receiver_id'> | undefined;
 
-  // Bestand bestaat maar gebruiker is geen giver/receiver én geen super admin → weiger
+  // Alleen giver/receiver van de bijbehorende anytimer of een super admin mag het
+  // bestand zien. Geen bijbehorende anytimer (bijv. verwijderd) → ook weigeren.
   const isSuperAdmin = (db.prepare('SELECT role FROM users WHERE id = ?').get(session.id) as { role: string } | undefined)?.role === 'admin';
-  if (!isSuperAdmin && anytimer && anytimer.giver_id !== session.id && anytimer.receiver_id !== session.id) {
+  const isParticipant = anytimer !== undefined && (anytimer.giver_id === session.id || anytimer.receiver_id === session.id);
+  if (!isSuperAdmin && !isParticipant) {
     return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
   }
 
