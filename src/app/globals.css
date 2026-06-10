@@ -6,36 +6,49 @@
 :root {
   --background: #f9f9f8;
   --foreground: #1a1a1a;
+
+  /* Warm zinc-based gray palette — light mode values.
+     Mid-range shades (400-600) are darker than stock zinc for better contrast. */
+  --g-50:  oklch(98.5% 0 0);
+  --g-100: oklch(96.7% 0.001 286.375);
+  --g-200: oklch(92%   0.004 286.32);
+  --g-300: oklch(87.1% 0.006 286.286);
+  --g-400: oklch(34%   0.020 286);
+  --g-500: oklch(27%   0.020 286);
+  --g-600: oklch(22%   0.018 286);
+  --g-700: oklch(37%   0.013 285.805);
+  --g-800: oklch(27.4% 0.006 286.033);
+  --g-900: oklch(21%   0.006 285.885);
+  --g-950: oklch(14.1% 0.005 285.823);
 }
 
 .dark {
-  /* Slightly warm, soft near-black instead of cold pure black.
-     Sits just below zinc-900 so cards/surfaces elevate above it. */
   --background: #0e0e11;
   --foreground: #ededee;
+
+  /* Dark mode: lighten mid-range grays so they read as near-white, not grey */
+  --g-400: oklch(80%   0.008 286);
+  --g-500: oklch(76%   0.008 286);
+  --g-600: oklch(70%   0.010 286);
 }
 
+/* inline: utility classes reference the CSS var at runtime, so dark/light flips work */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-}
 
-/* Remap the default `gray-*` palette (cool, blue-tinted) to the warmer,
-   near-neutral `zinc` scale. Every existing `*-gray-NNN` utility in the app
-   picks this up, so dark mode loses its harsh cold cast app-wide. */
-@theme {
-  --color-gray-50: oklch(98.5% 0 0);
-  --color-gray-100: oklch(96.7% 0.001 286.375);
-  --color-gray-200: oklch(92% 0.004 286.32);
-  --color-gray-300: oklch(87.1% 0.006 286.286);
-  --color-gray-400: oklch(70.5% 0.015 286.067);
-  --color-gray-500: oklch(55.2% 0.016 285.938);
-  --color-gray-600: oklch(44.2% 0.017 285.786);
-  --color-gray-700: oklch(37% 0.013 285.805);
-  --color-gray-800: oklch(27.4% 0.006 286.033);
-  --color-gray-900: oklch(21% 0.006 285.885);
-  --color-gray-950: oklch(14.1% 0.005 285.823);
+  --color-gray-50:  var(--g-50);
+  --color-gray-100: var(--g-100);
+  --color-gray-200: var(--g-200);
+  --color-gray-300: var(--g-300);
+  --color-gray-400: var(--g-400);
+  --color-gray-500: var(--g-500);
+  --color-gray-600: var(--g-600);
+  --color-gray-700: var(--g-700);
+  --color-gray-800: var(--g-800);
+  --color-gray-900: var(--g-900);
+  --color-gray-950: var(--g-950);
 }
 
 body {
