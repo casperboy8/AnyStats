@@ -8,7 +8,7 @@ export async function GET() {
   if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
   const users = db.prepare(
-    'SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC'
+    `SELECT id, CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username, first_name, last_name, email, role, created_at FROM users ORDER BY created_at DESC`
   ).all();
 
   return NextResponse.json(users);

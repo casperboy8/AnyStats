@@ -24,7 +24,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const stats = db.prepare(`
     SELECT
       u.id,
-      u.username,
+      CASE WHEN u.first_name != '' THEN u.first_name || ' ' || u.last_name ELSE u.username END AS username,
       COUNT(CASE WHEN a.giver_id    = u.id AND a.status NOT IN ('completed','pending') AND other_om.user_id IS NOT NULL THEN 1 END) AS gegeven_actief,
       COUNT(CASE WHEN a.receiver_id = u.id AND a.status NOT IN ('completed','pending') AND other_om.user_id IS NOT NULL THEN 1 END) AS ontvangen_actief,
       COUNT(CASE WHEN a.giver_id    = u.id AND a.status = 'completed' AND other_om.user_id IS NOT NULL THEN 1 END) AS gegeven_totaal,

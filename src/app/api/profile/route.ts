@@ -10,8 +10,8 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
 
   const user = db.prepare(
-    'SELECT id, username, email, phone_number, whatsapp_notifications FROM users WHERE id = ?'
-  ).get(session.id) as Pick<User, 'id' | 'username' | 'email' | 'phone_number' | 'whatsapp_notifications'> | undefined;
+    `SELECT id, CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username, first_name, last_name, email, phone_number, whatsapp_notifications FROM users WHERE id = ?`
+  ).get(session.id) as Pick<User, 'id' | 'username' | 'first_name' | 'last_name' | 'email' | 'phone_number' | 'whatsapp_notifications'> | undefined;
 
   if (!user) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });
 

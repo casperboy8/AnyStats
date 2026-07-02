@@ -1,0 +1,60 @@
+
+> anystats@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.89.1:3000
+- Environments: .env.local
+✓ Ready in 1249ms
+(node:14092) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ GET /login? 200 in 1591ms (next.js: 782ms, proxy.ts: 270ms, application-code: 539ms)
+⚠ Blocked cross-origin request to Next.js dev resource /_next/webpack-hmr from "127.0.0.1".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['127.0.0.1'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET /login 200 in 105ms (next.js: 15ms, proxy.ts: 14ms, application-code: 77ms)
+ POST /api/auth/login 200 in 204ms (next.js: 90ms, proxy.ts: 9ms, application-code: 105ms)
+⚠ Blocked cross-origin request to Next.js dev resource /__nextjs_font/geist-latin.woff2 from "127.0.0.1".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['127.0.0.1'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET /login? 200 in 56ms (next.js: 8ms, proxy.ts: 7ms, application-code: 41ms)
+ GET /login 200 in 69ms (next.js: 7ms, proxy.ts: 6ms, application-code: 56ms)
+ GET /login? 200 in 57ms (next.js: 8ms, proxy.ts: 7ms, application-code: 42ms)
+ GET /login 200 in 54ms (next.js: 7ms, proxy.ts: 6ms, application-code: 41ms)
+ GET /login 200 in 51ms (next.js: 8ms, proxy.ts: 5ms, application-code: 38ms)
+ GET /login 200 in 54ms (next.js: 7ms, proxy.ts: 6ms, application-code: 41ms)
+ GET /api/auth/login 405 in 25ms (next.js: 6ms, proxy.ts: 10ms, application-code: 8ms)
+ GET / 200 in 137ms (next.js: 64ms, proxy.ts: 8ms, application-code: 65ms)
+ GET /login 200 in 61ms (next.js: 8ms, proxy.ts: 8ms, application-code: 45ms)
+ GET / 200 in 63ms (next.js: 9ms, proxy.ts: 9ms, application-code: 45ms)
+ GET /login 200 in 62ms (next.js: 9ms, proxy.ts: 7ms, application-code: 46ms)
+ GET / 200 in 53ms (next.js: 7ms, proxy.ts: 5ms, application-code: 41ms)
+ GET /login 200 in 54ms (next.js: 8ms, proxy.ts: 5ms, application-code: 40ms)
+ GET / 200 in 57ms (next.js: 7ms, proxy.ts: 6ms, application-code: 44ms)
+ GET /login 200 in 60ms (next.js: 7ms, proxy.ts: 5ms, application-code: 48ms)
+ GET / 200 in 54ms (next.js: 7ms, proxy.ts: 6ms, application-code: 41ms)
+ GET /login 200 in 100ms (next.js: 21ms, proxy.ts: 38ms, application-code: 40ms)
+ GET / 200 in 122ms (next.js: 11ms, proxy.ts: 12ms, application-code: 98ms)
+ GET /login 200 in 107ms (next.js: 49ms, proxy.ts: 8ms, application-code: 49ms)
+ GET / 200 in 116ms (next.js: 12ms, proxy.ts: 10ms, application-code: 94ms)
+ GET /login 200 in 63ms (next.js: 10ms, proxy.ts: 6ms, application-code: 47ms)
+ GET /login 200 in 63ms (next.js: 9ms, proxy.ts: 7ms, application-code: 47ms)
+[?25h

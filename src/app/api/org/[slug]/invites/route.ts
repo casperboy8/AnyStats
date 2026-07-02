@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   }
 
   const invites = db.prepare(`
-    SELECT i.*, u.username AS created_by_username
+    SELECT i.*, CASE WHEN u.first_name != '' THEN u.first_name || ' ' || u.last_name ELSE u.username END AS created_by_username
     FROM organisation_invites i
     JOIN users u ON u.id = i.created_by
     WHERE i.organisation_id = ?

@@ -20,11 +20,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   if (!membership && !isSuperAdmin) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
   const members = db.prepare(`
-    SELECT om.id, om.role, om.joined_at, u.id AS user_id, u.username, u.email
+    SELECT om.id, om.role, om.joined_at, u.id AS user_id,
+      CASE WHEN u.first_name != '' THEN u.first_name || ' ' || u.last_name ELSE u.username END AS username,
+      u.email
     FROM organisation_members om
     JOIN users u ON om.user_id = u.id
     WHERE om.organisation_id = ?
-    ORDER BY om.role DESC, u.username
+    ORDER BY om.role DESC, username
   `).all(org.id);
 
   return NextResponse.json(members);

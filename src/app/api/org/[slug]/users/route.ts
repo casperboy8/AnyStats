@@ -18,12 +18,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   const members = db.prepare(`
     SELECT
       u.id,
-      u.username,
+      CASE WHEN u.first_name != '' THEN u.first_name || ' ' || u.last_name ELSE u.username END AS username,
       (SELECT COUNT(*) FROM anytimers a WHERE a.receiver_id = u.id AND a.status = 'completed') AS ontvangen_totaal_global
     FROM users u
     JOIN organisation_members om ON om.user_id = u.id
     WHERE om.organisation_id = ?
-    ORDER BY u.username
+    ORDER BY username
   `).all(org.id) as { id: number; username: string; ontvangen_totaal_global: number }[];
 
   return NextResponse.json(members);

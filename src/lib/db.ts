@@ -98,6 +98,9 @@ for (const sql of [
   'ALTER TABLE users ADD COLUMN phone_number TEXT',
   'ALTER TABLE users ADD COLUMN phone_verified INTEGER DEFAULT 0',
   'ALTER TABLE users ADD COLUMN whatsapp_notifications INTEGER DEFAULT 1',
+  // Naam-velden
+  "ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT ''",
 ]) {
   try { db.exec(sql); } catch { /* bestaat al */ }
 }
@@ -105,6 +108,8 @@ for (const sql of [
 export type User = {
   id: number;
   username: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password_hash: string;
   role: string;

@@ -15,21 +15,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Te veel registraties. Probeer het over een uur opnieuw.' }, { status: 429 });
   }
 
-  const { username, email, password, phone_number, invite_code } = await req.json();
+  const { first_name, last_name, email, password, phone_number, invite_code } = await req.json();
 
-  if (!username || !email || !password) {
-    return NextResponse.json({ error: 'Alle velden zijn verplicht' }, { status: 400 });
+  if (!first_name || !last_name || !email || !password) {
+    return NextResponse.json({ error: 'Voornaam, achternaam, email en wachtwoord zijn verplicht' }, { status: 400 });
   }
   if (password.length < 6) {
     return NextResponse.json({ error: 'Wachtwoord minimaal 6 tekens' }, { status: 400 });
   }
 
   const emailLower = email.trim().toLowerCase();
-  const usernameLower = username.trim().toLowerCase();
+  const firstNameTrimmed = first_name.trim();
+  const lastNameTrimmed = last_name.trim();
 
-  const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?').get(emailLower, usernameLower);
-  if (existing) {
-    return NextResponse.json({ error: 'Email of gebruikersnaam al in gebruik' }, { status: 409 });
+  const existingEmail = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(emailLower);
+  if (existingEmail) {
+    return NextResponse.json({ error: 'Email al in gebruik' }, { status: 409 });
+  }
+
+  // Genereer unieke username op basis van voor- en achternaam
+  const baseUsername = (firstNameTrimmed + lastNameTrimmed).toLowerCase().replace(/\s+/g, '');
+  let username = baseUsername;
+  let suffix = 1;
+  while (db.prepare('SELECT id FROM users WHERE LOWER(username) = ?').get(username)) {
+    username = baseUsername + suffix++;
   }
 
   // Telefoonnummer normaliseren (optioneel veld)
@@ -49,21 +58,22 @@ export async function POST(req: NextRequest) {
   const role = isFirst ? 'admin' : 'user';
 
   const result = db.prepare(
-    'INSERT INTO users (username, email, password_hash, role, phone_number) VALUES (?, ?, ?, ?, ?)'
-  ).run(usernameLower, emailLower, hash, role, normalizedPhone);
+    'INSERT INTO users (username, first_name, last_name, email, password_hash, role, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(username, firstNameTrimmed, lastNameTrimmed, emailLower, hash, role, normalizedPhone);
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid) as User;
+  const displayName = `${user.first_name} ${user.last_name}`;
 
-  await createSession({ id: user.id, username: user.username, email: user.email, role: user.role });
+  await createSession({ id: user.id, username: displayName, first_name: user.first_name, last_name: user.last_name, email: user.email, role: user.role });
 
   // Koppelcode verwerken
   if (invite_code) {
     const invite = findValidInvite(invite_code);
     if (invite) {
       redeemInvite(invite, user.id);
-      return NextResponse.json({ ok: true, redirect: `/org/${invite.org_slug}`, user: { id: user.id, username: user.username, role: user.role } });
+      return NextResponse.json({ ok: true, redirect: `/org/${invite.org_slug}`, user: { id: user.id, username: displayName, role: user.role } });
     }
   }
 
-  return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
+  return NextResponse.json({ ok: true, user: { id: user.id, username: displayName, role: user.role } });
 }

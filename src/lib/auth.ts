@@ -8,6 +8,8 @@ const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 export type SessionUser = {
   id: number;
   username: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: string;
 };

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id) VALUES (?, ?, ?, ?, ?)'
     ).run(session.id, anytimer.receiver_id, `Straf: geweigerd (${anytimer.reason})`, 'active', anytimer.organisation_id);
 
-    const receiverUser = db.prepare('SELECT username FROM users WHERE id = ?').get(anytimer.receiver_id) as { username: string };
+    const receiverUser = db.prepare(`SELECT CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username FROM users WHERE id = ?`).get(anytimer.receiver_id) as { username: string };
     const message = `${receiverUser.username} heeft geweigerd. Anytimer blijft actief + 1 extra.`;
     createNotification(session.id, 'anytimer_refused', message, anytimer.id);
 

@@ -14,6 +14,9 @@ export async function proxy(request: NextRequest) {
 
   if (publicApiPaths.some(p => pathname.startsWith(p))) return NextResponse.next();
 
+  // Root: landingspagina voor iedereen, page.tsx handelt de auth-redirect
+  if (pathname === '/') return NextResponse.next();
+
   const token = request.cookies.get('session')?.value;
 
   if (publicPaths.some(p => pathname.startsWith(p))) {

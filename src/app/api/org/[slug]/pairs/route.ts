@@ -24,9 +24,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const pairs = db.prepare(`
     SELECT
       u_giver.id   AS giver_id,
-      u_giver.username AS giver_username,
+      CASE WHEN u_giver.first_name != '' THEN u_giver.first_name || ' ' || u_giver.last_name ELSE u_giver.username END AS giver_username,
       u_receiver.id AS receiver_id,
-      u_receiver.username AS receiver_username,
+      CASE WHEN u_receiver.first_name != '' THEN u_receiver.first_name || ' ' || u_receiver.last_name ELSE u_receiver.username END AS receiver_username,
       COUNT(*) AS count
     FROM anytimers a
     JOIN users u_giver    ON a.giver_id    = u_giver.id

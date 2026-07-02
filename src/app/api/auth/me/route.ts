@@ -13,7 +13,7 @@ export async function GET() {
 
   // Lees actuele rol uit DB (JWT kan stale zijn na rolwijziging)
   const user = db.prepare(
-    'SELECT id, username, email, role FROM users WHERE id = ?'
+    `SELECT id, CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username, email, role FROM users WHERE id = ?`
   ).get(session.id) as Pick<User, 'id' | 'username' | 'email' | 'role'> | undefined;
 
   if (!user) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });

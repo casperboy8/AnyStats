@@ -10,8 +10,8 @@ export async function GET() {
 
   const myAnytimers = db.prepare(`
     SELECT a.*,
-      u_giver.username AS giver_username,
-      u_receiver.username AS receiver_username
+      CASE WHEN u_giver.first_name != '' THEN u_giver.first_name || ' ' || u_giver.last_name ELSE u_giver.username END AS giver_username,
+      CASE WHEN u_receiver.first_name != '' THEN u_receiver.first_name || ' ' || u_receiver.last_name ELSE u_receiver.username END AS receiver_username
     FROM anytimers a
     JOIN users u_giver ON a.giver_id = u_giver.id
     JOIN users u_receiver ON a.receiver_id = u_receiver.id
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Je kunt geen anytimer op jezelf zetten' }, { status: 400 });
   }
 
-  const receiver = db.prepare('SELECT id, username FROM users WHERE id = ?').get(receiver_id) as { id: number; username: string } | undefined;
+  const receiver = db.prepare(`SELECT id, CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username FROM users WHERE id = ?`).get(receiver_id) as { id: number; username: string } | undefined;
   if (!receiver) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });
 
   // Als een org is meegegeven: giver én receiver moeten daar lid van zijn

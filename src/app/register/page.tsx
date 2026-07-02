@@ -9,7 +9,7 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const inviteCode = searchParams.get('invite');
 
-  const [form, setForm] = useState({ username: '', email: '', password: '', phone_number: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', phone_number: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -49,16 +49,29 @@ export default function RegisterPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-7">
           <form onSubmit={submit} className="space-y-4">
-            <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Gebruikersnaam</label>
-              <input
-                type="text"
-                value={form.username}
-                onChange={e => update('username', e.target.value)}
-                required
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
-                placeholder="jouwNaam"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Voornaam</label>
+                <input
+                  type="text"
+                  value={form.first_name}
+                  onChange={e => update('first_name', e.target.value)}
+                  required
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                  placeholder="Jan"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Achternaam</label>
+                <input
+                  type="text"
+                  value={form.last_name}
+                  onChange={e => update('last_name', e.target.value)}
+                  required
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                  placeholder="de Vries"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Email</label>

@@ -3,10 +3,11 @@ import { getSession } from "@/lib/auth";
 import { getUserOrgs } from "@/lib/org";
 import db from "@/lib/db";
 import type { User } from "@/lib/db";
+import LandingPage from "./_components/LandingPage";
 
 export default async function HomePage() {
   const session = await getSession();
-  if (!session) redirect("/login");
+  if (!session) return <LandingPage />;
 
   const user = db.prepare("SELECT role FROM users WHERE id = ?").get(session.id) as Pick<User, "role"> | undefined;
   const role = user?.role ?? session.role;

@@ -7,7 +7,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
 
   const users = db.prepare(
-    'SELECT id, username, email, role, created_at FROM users WHERE id != ? ORDER BY username ASC'
+    `SELECT id, CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username, email, role, created_at FROM users WHERE id != ? ORDER BY username ASC`
   ).all(session.id);
 
   return NextResponse.json(users);

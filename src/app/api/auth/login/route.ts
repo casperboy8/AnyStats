@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Onjuiste gegevens' }, { status: 401 });
   }
 
-  await createSession({ id: user.id, username: user.username, email: user.email, role: user.role });
+  const displayName = user.first_name ? `${user.first_name} ${user.last_name}` : user.username;
+  await createSession({ id: user.id, username: displayName, first_name: user.first_name, last_name: user.last_name, email: user.email, role: user.role });
 
   // Koppelcode verwerken indien meegegeven
   if (invite_code) {
