@@ -11,14 +11,18 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
     ?? req.headers.get('x-real-ip')
     ?? 'unknown';
-  if (!checkRateLimit(`login:${ip}`, 10, 15 * 60 * 1000)) {
-    return NextResponse.json({ error: 'Te veel pogingen. Probeer het over 15 minuten opnieuw.' }, { status: 429 });
-  }
 
   const { email, password, invite_code } = await req.json();
 
   if (!email || !password) {
     return NextResponse.json({ error: 'Email en wachtwoord verplicht' }, { status: 400 });
+  }
+
+  // Limiteer zowel per IP als per e-mailadres: een client kan `x-forwarded-for`
+  // vervalsen, maar niet de IP-limiet omzeilen zonder ook het e-mailadres te wisselen.
+  if (!checkRateLimit(`login:${ip}`, 10, 15 * 60 * 1000)
+    || !checkRateLimit(`login:${email.trim().toLowerCase()}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Te veel pogingen. Probeer het over 15 minuten opnieuw.' }, { status: 429 });
   }
 
   const user = db.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)').get(email) as User | undefined;

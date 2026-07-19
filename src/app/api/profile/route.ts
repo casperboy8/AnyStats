@@ -25,6 +25,16 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json();
 
+  // Voor- en achternaam verwerken (voor bestaande accounts die deze nog niet hadden ingevuld)
+  if ('first_name' in body || 'last_name' in body) {
+    const firstName = (body.first_name as string)?.trim() ?? '';
+    const lastName = (body.last_name as string)?.trim() ?? '';
+    if (!firstName || !lastName) {
+      return NextResponse.json({ error: 'Voornaam en achternaam zijn verplicht' }, { status: 400 });
+    }
+    db.prepare('UPDATE users SET first_name = ?, last_name = ? WHERE id = ?').run(firstName, lastName, session.id);
+  }
+
   // Telefoonnummer verwerken
   if ('phone_number' in body) {
     const raw = (body.phone_number as string)?.trim() ?? '';

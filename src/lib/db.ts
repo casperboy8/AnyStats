@@ -75,6 +75,20 @@ db.exec(`
   );
 `);
 
+// Eenmalige migratie: tabel heette eerst kots_events
+try { db.exec('ALTER TABLE kots_events RENAME TO barf_events'); } catch { /* bestaat niet (meer) */ }
+
+// Barf bokaal — telt hoe vaak iemand heeft gebarft binnen een groep
+db.exec(`
+  CREATE TABLE IF NOT EXISTS barf_events (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    organisation_id TEXT NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    logged_by       INTEGER NOT NULL REFERENCES users(id),
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // Koppelcodes voor teams
 db.exec(`
   CREATE TABLE IF NOT EXISTS organisation_invites (
@@ -170,6 +184,14 @@ export type Video = {
   storage_path: string;
   file_size_bytes: number | null;
   duration_seconds: number | null;
+  created_at: string;
+};
+
+export type BarfEvent = {
+  id: number;
+  organisation_id: string;
+  user_id: number;
+  logged_by: number;
   created_at: string;
 };
 

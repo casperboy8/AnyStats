@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import CompleteProfileModal from "@/components/CompleteProfileModal";
 import { getSession } from "@/lib/auth";
 import { getUserOrgs } from "@/lib/org";
 
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <Navbar user={session} orgs={orgs} />
           <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+          {session && !session.first_name && <CompleteProfileModal />}
         </ThemeProvider>
       </body>
     </html>

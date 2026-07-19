@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import db from '@/lib/db';
 
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) throw new Error('JWT_SECRET environment variable is not set');
@@ -37,7 +38,21 @@ export async function getSession(): Promise<SessionUser | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as unknown as SessionUser;
+    const session = payload as unknown as SessionUser;
+
+    // Rol en naam altijd vers uit de DB lezen: het JWT blijft tot 24h geldig, dus een
+    // rolwijziging, naamwijziging of verwijderd account moet meteen doorwerken, niet pas na herinloggen.
+    const current = db.prepare('SELECT username, first_name, last_name, role FROM users WHERE id = ?')
+      .get(session.id) as { username: string; first_name: string; last_name: string; role: string } | undefined;
+    if (!current) return null;
+
+    return {
+      ...session,
+      username: current.first_name ? `${current.first_name} ${current.last_name}` : current.username,
+      first_name: current.first_name,
+      last_name: current.last_name,
+      role: current.role,
+    };
   } catch {
     return null;
   }

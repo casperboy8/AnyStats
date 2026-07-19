@@ -41,6 +41,11 @@ export default function OrgDashboardPage() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
+  const [barfModal, setBarfModal] = useState(false);
+  const [barfUserId, setBarfUserId] = useState('');
+  const [barfLoading, setBarfLoading] = useState(false);
+  const [barfError, setBarfError] = useState('');
+
   const load = useCallback(async () => {
     const [meRes, anyRes, usersRes] = await Promise.all([
       fetch('/api/auth/me'),
@@ -111,6 +116,20 @@ export default function OrgDashboardPage() {
     setBevestigenModal(null); load();
   }
 
+  async function logBarf() {
+    if (!barfUserId) return;
+    setBarfError(''); setBarfLoading(true);
+    const res = await fetch(`/api/org/${slug}/barf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: Number(barfUserId) }),
+    });
+    const data = await res.json();
+    setBarfLoading(false);
+    if (!res.ok) { setBarfError(data.error); return; }
+    setBarfModal(false); setBarfUserId(''); load();
+  }
+
   async function uploadBewijs(id: number) {
     if (!uploadFile) return;
     setUploadError(''); setUploadLoading(true);
@@ -145,12 +164,20 @@ export default function OrgDashboardPage() {
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{session?.username}</h1>
-        <button
-          onClick={() => setNewModal(true)}
-          className="bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
-        >
-          + Geven
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setBarfModal(true)}
+            className="border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
+          >
+            🤮 Barf
+          </button>
+          <button
+            onClick={() => setNewModal(true)}
+            className="bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
+          >
+            + Geven
+          </button>
+        </div>
       </div>
 
       <div className="space-y-8">
@@ -282,6 +309,30 @@ export default function OrgDashboardPage() {
             <button onClick={() => { setNewModal(false); setNewError(''); }} className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 py-2.5 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuleren</button>
             <button onClick={createAnytimer} disabled={newLoading || !newForm.receiver_id || !newForm.reason} className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
               {newLoading ? 'Bezig...' : 'Versturen'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Barf modal */}
+      <Modal open={barfModal} onClose={() => { setBarfModal(false); setBarfError(''); }} title="Barf registreren">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Wie heeft gebarft?</label>
+            <select
+              value={barfUserId}
+              onChange={e => setBarfUserId(e.target.value)}
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-800 dark:text-gray-100"
+            >
+              <option value="">Kies een persoon...</option>
+              {users.map(u => <option key={u.id} value={u.id}>{u.id === myId ? `${u.username} (jij)` : u.username}</option>)}
+            </select>
+          </div>
+          {barfError && <p className="text-red-500 text-sm">{barfError}</p>}
+          <div className="flex gap-2 pt-1">
+            <button onClick={() => { setBarfModal(false); setBarfError(''); }} className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 py-2.5 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuleren</button>
+            <button onClick={logBarf} disabled={barfLoading || !barfUserId} className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
+              {barfLoading ? 'Bezig...' : 'Registreren'}
             </button>
           </div>
         </div>

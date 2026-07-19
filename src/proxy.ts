@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import db from '@/lib/db';
 
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) throw new Error('JWT_SECRET environment variable is not set');
@@ -39,11 +40,18 @@ export async function proxy(request: NextRequest) {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
-    if (pathname.startsWith('/admin') && payload.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-    if (pathname.startsWith('/api/admin') && payload.role !== 'admin') {
-      return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
+    if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+      // Rol vers uit de DB lezen: het JWT blijft tot 24h geldig, dus een
+      // demotie moet meteen doorwerken en niet pas na het verlopen van het token.
+      const user = db.prepare('SELECT role FROM users WHERE id = ?').get(payload.id) as { role: string } | undefined;
+      const isAdmin = user?.role === 'admin';
+
+      if (!isAdmin) {
+        if (pathname.startsWith('/api/admin')) {
+          return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
+        }
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
     }
 
     return NextResponse.next();

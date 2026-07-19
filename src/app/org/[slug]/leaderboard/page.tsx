@@ -12,6 +12,7 @@ type Stat = {
   gegeven_totaal: number;
   ontvangen_totaal: number;
   ontvangen_totaal_global: number;
+  barf_totaal: number;
 };
 
 type Pair = {
@@ -165,6 +166,22 @@ export default function OrgLeaderboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Barf bokaal */}
+      {(() => {
+        const maxBarf = Math.max(0, ...stats.map(s => s.barf_totaal));
+        if (maxBarf === 0) return null;
+        const leaders = stats.filter(s => s.barf_totaal === maxBarf);
+        return (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 mb-8">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">🏆 Barf bokaal</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {leaders.map(l => l.username).join(' & ')}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{maxBarf}x gebarft in deze groep</p>
+          </div>
+        );
+      })()}
 
       {/* Wie op wie */}
       {pairs.length > 0 && (

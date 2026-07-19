@@ -26,6 +26,20 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Kan jezelf niet verwijderen' }, { status: 400 });
   }
 
+  // Weiger verwijderen zolang deze gebruiker de enige owner van een organisatie is,
+  // anders blijft die organisatie zonder owner achter.
+  const orphanedOrgs = db.prepare(`
+    SELECT o.name FROM organisation_members m
+    JOIN organisations o ON o.id = m.organisation_id
+    WHERE m.user_id = ? AND m.role = 'owner'
+      AND (SELECT COUNT(*) FROM organisation_members m2 WHERE m2.organisation_id = m.organisation_id AND m2.role = 'owner') = 1
+  `).all(id) as { name: string }[];
+  if (orphanedOrgs.length > 0) {
+    return NextResponse.json({
+      error: `Wijs eerst een andere owner aan voor: ${orphanedOrgs.map(o => o.name).join(', ')}`,
+    }, { status: 409 });
+  }
+
   // Verwijder alles wat naar de gebruiker verwijst zonder ON DELETE CASCADE,
   // anders blokkeert de foreign key constraint de delete.
   db.transaction(() => {
