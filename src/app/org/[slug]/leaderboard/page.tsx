@@ -15,14 +15,6 @@ type Stat = {
   barf_totaal: number;
 };
 
-type Pair = {
-  giver_id: number;
-  giver_username: string;
-  receiver_id: number;
-  receiver_username: string;
-  count: number;
-};
-
 type SessionUser = {
   id: number;
   username: string;
@@ -34,10 +26,10 @@ function StatRow({ s, rank, highlight }: { s: Stat; rank: number; highlight?: bo
   const i = rank - 1;
   return (
     <div
-      className={`grid grid-cols-3 sm:grid-cols-4 px-4 py-3.5 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center
+      className={`flex items-center justify-between gap-3 px-4 py-3.5 border-b border-gray-50 dark:border-gray-800 last:border-0
         ${highlight ? 'bg-amber-50 dark:bg-amber-950/20' : ''}`}
     >
-      <div className="col-span-2 flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0
           ${i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : i === 2 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
           {rank}
@@ -49,16 +41,9 @@ function StatRow({ s, rank, highlight }: { s: Stat; rank: number; highlight?: bo
           <AchievementBadge tier={getAchievementTier(s.ontvangen_totaal_global)} />
         </div>
       </div>
-      <div className="hidden sm:block text-center">
-        <span className={`text-sm font-medium ${s.ontvangen_actief > 0 ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`}>
-          {s.ontvangen_actief > 0 ? s.ontvangen_actief : '—'}
-        </span>
-      </div>
-      <div className="text-center">
-        <span className={`text-sm ${s.ontvangen_totaal > 0 ? 'text-gray-700 dark:text-gray-300 font-medium' : 'text-gray-300 dark:text-gray-600'}`}>
-          {s.ontvangen_totaal > 0 ? s.ontvangen_totaal : '—'}
-        </span>
-      </div>
+      <span className={`text-sm shrink-0 ${s.ontvangen_totaal > 0 ? 'text-gray-700 dark:text-gray-300 font-medium' : 'text-gray-300 dark:text-gray-600'}`}>
+        {s.ontvangen_totaal > 0 ? s.ontvangen_totaal : '—'}
+      </span>
     </div>
   );
 }
@@ -66,7 +51,6 @@ function StatRow({ s, rank, highlight }: { s: Stat; rank: number; highlight?: bo
 export default function OrgLeaderboardPage() {
   const { slug } = useParams<{ slug: string }>();
   const [stats, setStats] = useState<Stat[]>([]);
-  const [pairs, setPairs] = useState<Pair[]>([]);
   const [me, setMe] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -74,11 +58,9 @@ export default function OrgLeaderboardPage() {
   useEffect(() => {
     Promise.all([
       fetch(`/api/org/${slug}/leaderboard`).then(r => r.json()),
-      fetch(`/api/org/${slug}/pairs`).then(r => r.json()),
       fetch('/api/auth/me').then(r => r.ok ? r.json() : null),
-    ]).then(([leaderboard, pairsData, session]) => {
+    ]).then(([leaderboard, session]) => {
       if (Array.isArray(leaderboard)) setStats(leaderboard);
-      if (Array.isArray(pairsData)) setPairs(pairsData);
       if (session?.id) setMe(session);
       setLoading(false);
     });
@@ -106,10 +88,9 @@ export default function OrgLeaderboardPage() {
 
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden mb-6">
         {/* Header */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 px-4 py-3 border-b border-gray-100 dark:border-gray-800 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-          <div className="col-span-2">Naam</div>
-          <div className="hidden sm:block text-center">Actief</div>
-          <div className="text-center">Gedronken</div>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+          <div>Naam</div>
+          <div>Gedronken</div>
         </div>
 
         {stats.length === 0 ? (
@@ -151,60 +132,51 @@ export default function OrgLeaderboardPage() {
         )}
       </div>
 
-      {/* Totaalkaarten */}
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Totaal gedronken</p>
-          <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            {stats.reduce((a, s) => a + s.ontvangen_totaal, 0)}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Actief openstaand</p>
-          <p className="text-2xl font-semibold text-amber-500">
-            {stats.reduce((a, s) => a + s.ontvangen_actief, 0)}
-          </p>
-        </div>
+      {/* Totaalkaart */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4 mb-8">
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Totaal gedronken</p>
+        <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          {stats.reduce((a, s) => a + s.ontvangen_totaal, 0)}
+        </p>
       </div>
 
       {/* Barf bokaal */}
       {(() => {
-        const maxBarf = Math.max(0, ...stats.map(s => s.barf_totaal));
-        if (maxBarf === 0) return null;
-        const leaders = stats.filter(s => s.barf_totaal === maxBarf);
+        const barfed = stats.filter(s => s.barf_totaal > 0).sort((a, b) => b.barf_totaal - a.barf_totaal);
+        const topCounts = Array.from(new Set(barfed.map(s => s.barf_totaal))).slice(0, 3);
+        if (topCounts.length === 0) return null;
+        const podium = topCounts.map((count, i) => ({
+          place: i + 1,
+          count,
+          users: barfed.filter(s => s.barf_totaal === count),
+        }));
+        const [winner, ...runnersUp] = podium;
         return (
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 mb-8">
             <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">🏆 Barf bokaal</p>
             <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {leaders.map(l => l.username).join(' & ')}
+              {winner.users.map(u => u.username).join(' & ')}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{maxBarf}x gebarft in deze groep</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{winner.count}x gebarft</p>
+
+            {runnersUp.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800 space-y-1.5">
+                {runnersUp.map(({ place, count, users }) => (
+                  <div key={place} className="flex items-center gap-2.5">
+                    <span className="w-4 text-[11px] font-medium text-gray-300 dark:text-gray-600 shrink-0">
+                      {place}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-1 truncate">
+                      {users.map(u => u.username).join(' & ')}
+                    </span>
+                    <span className="text-[11px] text-gray-300 dark:text-gray-600 shrink-0">{count}x</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })()}
-
-      {/* Wie op wie */}
-      {pairs.length > 0 && (
-        <div>
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Wie op wie</h2>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-            <div className="grid grid-cols-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-              <div>Gever</div>
-              <div>Ontvanger</div>
-              <div className="text-right">Openstaand</div>
-            </div>
-            {pairs.map((p, i) => (
-              <div key={i} className="grid grid-cols-3 px-4 py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center">
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{p.giver_username}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 truncate">{p.receiver_username}</div>
-                <div className="text-right">
-                  <span className={`text-sm font-semibold ${p.count > 0 ? 'text-amber-500' : 'text-gray-400'}`}>{p.count}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

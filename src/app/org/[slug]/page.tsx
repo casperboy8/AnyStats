@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Modal from '@/components/Modal';
 import { AchievementBadge, getAchievementTier, type AchievementTier } from '@/components/AchievementBadge';
 
@@ -28,6 +29,7 @@ export default function OrgDashboardPage() {
   const [session, setSession] = useState<SessionUser | null>(null);
   const [anytimers, setAnytimers] = useState<Anytimer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [newModal, setNewModal] = useState(false);
@@ -47,14 +49,16 @@ export default function OrgDashboardPage() {
   const [barfError, setBarfError] = useState('');
 
   const load = useCallback(async () => {
-    const [meRes, anyRes, usersRes] = await Promise.all([
+    const [meRes, anyRes, usersRes, orgRes] = await Promise.all([
       fetch('/api/auth/me'),
       fetch(`/api/org/${slug}/anytimers`),
       fetch(`/api/org/${slug}/users`),
+      fetch(`/api/organisations/${slug}`),
     ]);
     if (meRes.ok) setSession(await meRes.json());
     if (anyRes.ok) setAnytimers(await anyRes.json());
     if (usersRes.ok) setUsers(await usersRes.json());
+    if (orgRes.ok) setIsOwner((await orgRes.json()).role === 'owner');
     setLoading(false);
   }, [slug]);
 
@@ -165,6 +169,15 @@ export default function OrgDashboardPage() {
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{session?.username}</h1>
         <div className="flex gap-2">
+          {isOwner && (
+            <Link
+              href={`/org/${slug}/settings`}
+              title="Groepsinstellingen"
+              className="border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm flex items-center"
+            >
+              ⚙️
+            </Link>
+          )}
           <button
             onClick={() => setBarfModal(true)}
             className="border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"

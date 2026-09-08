@@ -7,13 +7,21 @@ const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) throw new Error('JWT_SECRET environment variable is not set');
 const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
+// Altijd toegankelijk, ook met geldige sessie — een reset-link moet blijven werken
+// zelfs als je (op een ander apparaat) nog ingelogd bent.
+const alwaysPublicPaths = ['/forgot-password', '/reset-password', '/forgot-username'];
+// Alleen toegankelijk zonder geldige sessie — met sessie stuur je door naar /dashboard.
 const publicPaths = ['/login', '/register'];
-const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/push/vapid-public-key', '/api/invite/', '/join'];
+const publicApiPaths = [
+  '/api/auth/login', '/api/auth/register', '/api/auth/forgot-password', '/api/auth/reset-password',
+  '/api/auth/forgot-username', '/api/push/vapid-public-key', '/api/invite/', '/join',
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (publicApiPaths.some(p => pathname.startsWith(p))) return NextResponse.next();
+  if (alwaysPublicPaths.some(p => pathname.startsWith(p))) return NextResponse.next();
 
   // Root: landingspagina voor iedereen, page.tsx handelt de auth-redirect
   if (pathname === '/') return NextResponse.next();
@@ -24,7 +32,7 @@ export async function proxy(request: NextRequest) {
     if (token) {
       try {
         await jwtVerify(token, JWT_SECRET);
-        return NextResponse.redirect(new URL('/select-org', request.url));
+        return NextResponse.redirect(new URL('/dashboard', request.url));
       } catch { /* expired token, show login */ }
     }
     return NextResponse.next();

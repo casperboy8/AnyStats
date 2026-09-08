@@ -65,3 +65,38 @@ export function getOrgMembership(orgId: string, userId: number) {
     .prepare('SELECT * FROM organisation_members WHERE organisation_id = ? AND user_id = ?')
     .get(orgId, userId) as OrganisationMember | undefined;
 }
+
+/**
+ * Iedereen met wie de gebruiker minstens 1 groep deelt (unie over al zijn groepen),
+ * exclusief zichzelf. Groepen bepalen alleen déze zichtbaarheid — de any's/barf-teller
+ * zelf zijn altijd globaal, niet per groep.
+ */
+export function getNetworkUserIds(userId: number): number[] {
+  const rows = db
+    .prepare(`
+      SELECT DISTINCT om2.user_id AS id
+      FROM organisation_members om1
+      JOIN organisation_members om2 ON om2.organisation_id = om1.organisation_id
+      WHERE om1.user_id = ? AND om2.user_id != ?
+    `)
+    .all(userId, userId) as { id: number }[];
+  return rows.map(r => r.id);
+}
+
+/**
+ * Eén groep die beide gebruikers delen, of null als ze geen groep gemeen hebben.
+ * Wordt alleen gebruikt om de (verplichte) organisation_id-kolom te vullen bij het
+ * wegschrijven van een globaal aangemaakte any/barf — telt niet mee in statistieken.
+ */
+export function getSharedOrgId(userIdA: number, userIdB: number): string | null {
+  const row = db
+    .prepare(`
+      SELECT om1.organisation_id AS id
+      FROM organisation_members om1
+      JOIN organisation_members om2 ON om2.organisation_id = om1.organisation_id
+      WHERE om1.user_id = ? AND om2.user_id = ?
+      LIMIT 1
+    `)
+    .get(userIdA, userIdB) as { id: string } | undefined;
+  return row?.id ?? null;
+}

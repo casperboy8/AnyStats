@@ -17,6 +17,7 @@ export default async function HomePage() {
     if (role === "admin") redirect("/admin");
     redirect("/no-organisation");
   }
-  if (orgs.length === 1) redirect(`/org/${orgs[0].slug}`);
-  redirect("/select-org");
+  // Any's/barf zijn niet groep-gebonden — er hoeft geen groep gekozen te
+  // worden om iets te doen, dus iedereen gaat direct naar het dashboard.
+  redirect("/dashboard");
 }

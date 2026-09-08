@@ -156,7 +156,9 @@ export default function AdminWhatsappPage() {
             {/* Opstarten bericht */}
             {status.status === 'initializing' && (
               <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">
-                Chrome en WhatsApp worden gestart… dit duurt 15–30 seconden.
+                Chrome en WhatsApp worden gestart… dit duurt meestal 15–30 seconden.
+                Duurt het langer dan 45 seconden? Dan wordt de poging automatisch afgebroken
+                en kun je opnieuw op &quot;Verbinden&quot; klikken.
               </p>
             )}
 

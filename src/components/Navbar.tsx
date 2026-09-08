@@ -54,21 +54,23 @@ export default function Navbar({ user, orgs }: Props) {
   if (!user) return null;
 
   // Gedeelde nav-links (zowel desktop als mobiel menu)
+  // Dashboard is altijd globaal — any's/barf zijn niet groep-gebonden, dus
+  // die link hangt niet af van welke groep je eventueel net bekijkt.
   const orgLinks = (mobile = false) => (
     <>
+      <Link
+        href="/dashboard"
+        onClick={() => setMenuOpen(false)}
+        className={mobile
+          ? `block px-4 py-3 text-sm font-medium border-b border-gray-50 ${pathname === '/dashboard' ? 'text-amber-600' : 'text-gray-700 dark:text-gray-300'}`
+          : `text-sm transition-colors ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
+        }
+      >
+        Dashboard
+      </Link>
+
       {currentSlug ? (
         <>
-          <Link
-            href={`/org/${currentSlug}`}
-            onClick={() => setMenuOpen(false)}
-            className={mobile
-              ? `block px-4 py-3 text-sm font-medium border-b border-gray-50 ${pathname === `/org/${currentSlug}` ? 'text-amber-600' : 'text-gray-700 dark:text-gray-300'}`
-              : `text-sm transition-colors ${pathname === `/org/${currentSlug}` ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
-            }
-          >
-            Dashboard
-          </Link>
-
           <Link
             href={`/org/${currentSlug}/leaderboard`}
             onClick={() => setMenuOpen(false)}
@@ -113,28 +115,16 @@ export default function Navbar({ user, orgs }: Props) {
           )}
         </>
       ) : (
-        <>
-          <Link
-            href="/dashboard"
-            onClick={() => setMenuOpen(false)}
-            className={mobile
-              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
-              : `text-sm transition-colors ${pathname === '/dashboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
-            }
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/leaderboard"
-            onClick={() => setMenuOpen(false)}
-            className={mobile
-              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
-              : `text-sm transition-colors ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
-            }
-          >
-            Klassement
-          </Link>
-        </>
+        <Link
+          href="/leaderboard"
+          onClick={() => setMenuOpen(false)}
+          className={mobile
+            ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+            : `text-sm transition-colors ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
+          }
+        >
+          Klassement
+        </Link>
       )}
 
       {user.role === 'admin' && (
@@ -166,16 +156,15 @@ export default function Navbar({ user, orgs }: Props) {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
   );
 
-  const bottomTabs: { href: string; label: string; active: boolean; icon: React.ReactNode }[] = currentSlug
-    ? [
-        { href: `/org/${currentSlug}`, label: 'Dashboard', active: pathname === `/org/${currentSlug}`, icon: iconHome },
-        { href: `/org/${currentSlug}/leaderboard`, label: 'Klassement', active: pathname === `/org/${currentSlug}/leaderboard`, icon: iconTrophy },
-        ...(canSeeMembers ? [{ href: `/org/${currentSlug}/members`, label: 'Leden', active: pathname === `/org/${currentSlug}/members`, icon: iconUsers }] : []),
-      ]
-    : [
-        { href: '/dashboard', label: 'Dashboard', active: pathname === '/dashboard', icon: iconHome },
-        { href: '/leaderboard', label: 'Klassement', active: pathname === '/leaderboard', icon: iconTrophy },
-      ];
+  const bottomTabs: { href: string; label: string; active: boolean; icon: React.ReactNode }[] = [
+    { href: '/dashboard', label: 'Dashboard', active: pathname === '/dashboard', icon: iconHome },
+    ...(currentSlug
+      ? [
+          { href: `/org/${currentSlug}/leaderboard`, label: 'Klassement', active: pathname === `/org/${currentSlug}/leaderboard`, icon: iconTrophy },
+          ...(canSeeMembers ? [{ href: `/org/${currentSlug}/members`, label: 'Leden', active: pathname === `/org/${currentSlug}/members`, icon: iconUsers }] : []),
+        ]
+      : [{ href: '/leaderboard', label: 'Klassement', active: pathname === '/leaderboard', icon: iconTrophy }]),
+  ];
 
   return (
     <>
@@ -187,7 +176,7 @@ export default function Navbar({ user, orgs }: Props) {
 
           {/* Logo */}
           <Link
-            href={currentSlug ? `/org/${currentSlug}` : '/dashboard'}
+            href="/dashboard"
             className="flex items-center gap-2 shrink-0"
             title="AnyStats"
           >

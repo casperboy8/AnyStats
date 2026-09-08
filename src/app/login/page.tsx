@@ -58,7 +58,12 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Wachtwoord</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm text-gray-600 dark:text-gray-400">Wachtwoord</label>
+                <Link href="/forgot-password" className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                  Wachtwoord vergeten?
+                </Link>
+              </div>
               <input
                 type="password"
                 value={password}
@@ -88,6 +93,11 @@ export default function LoginPage() {
             className="text-gray-700 dark:text-gray-300 hover:text-gray-900 font-medium"
           >
             Registreer
+          </Link>
+        </p>
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
+          <Link href="/forgot-username" className="hover:text-gray-700 dark:hover:text-gray-300">
+            E-mailadres vergeten?
           </Link>
         </p>
       </div>

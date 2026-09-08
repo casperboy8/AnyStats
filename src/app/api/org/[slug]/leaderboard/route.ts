@@ -21,25 +21,22 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     .get(org.id, session.id);
   if (!isMember) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
+  // Groepen bepalen alleen wie er op déze lijst staat — de stats zelf zijn
+  // altijd globaal (over al iemands groepen heen), niet per groep geteld.
   const stats = db.prepare(`
     SELECT
       u.id,
       CASE WHEN u.first_name != '' THEN u.first_name || ' ' || u.last_name ELSE u.username END AS username,
-      COUNT(CASE WHEN a.giver_id    = u.id AND a.status NOT IN ('completed','pending') AND other_om.user_id IS NOT NULL THEN 1 END) AS gegeven_actief,
-      COUNT(CASE WHEN a.receiver_id = u.id AND a.status NOT IN ('completed','pending') AND other_om.user_id IS NOT NULL THEN 1 END) AS ontvangen_actief,
-      COUNT(CASE WHEN a.giver_id    = u.id AND a.status = 'completed' AND other_om.user_id IS NOT NULL THEN 1 END) AS gegeven_totaal,
-      COUNT(CASE WHEN a.receiver_id = u.id AND a.status = 'completed' AND other_om.user_id IS NOT NULL THEN 1 END) AS ontvangen_totaal,
+      (SELECT COUNT(*) FROM anytimers ga WHERE ga.giver_id    = u.id AND ga.status NOT IN ('completed','pending')) AS gegeven_actief,
+      (SELECT COUNT(*) FROM anytimers ga WHERE ga.receiver_id = u.id AND ga.status NOT IN ('completed','pending')) AS ontvangen_actief,
+      (SELECT COUNT(*) FROM anytimers ga WHERE ga.giver_id    = u.id AND ga.status = 'completed') AS gegeven_totaal,
+      (SELECT COUNT(*) FROM anytimers ga WHERE ga.receiver_id = u.id AND ga.status = 'completed') AS ontvangen_totaal,
       (SELECT COUNT(*) FROM anytimers ga WHERE ga.receiver_id = u.id AND ga.status = 'completed') AS ontvangen_totaal_global,
-      (SELECT COUNT(*) FROM barf_events k WHERE k.user_id = u.id AND k.organisation_id = ?) AS barf_totaal
+      (SELECT COUNT(*) FROM barf_events k WHERE k.user_id = u.id) AS barf_totaal
     FROM users u
     JOIN organisation_members om ON om.user_id = u.id AND om.organisation_id = ?
-    LEFT JOIN anytimers a ON (a.giver_id = u.id OR a.receiver_id = u.id)
-    LEFT JOIN organisation_members other_om ON
-      other_om.organisation_id = ? AND
-      other_om.user_id = CASE WHEN a.giver_id = u.id THEN a.receiver_id ELSE a.giver_id END
-    GROUP BY u.id
     ORDER BY ontvangen_totaal DESC, ontvangen_actief DESC
-  `).all(org.id, org.id, org.id);
+  `).all(org.id);
 
   return NextResponse.json(stats);
 }

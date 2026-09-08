@@ -14,6 +14,13 @@ import path from 'path';
 
 export type WhatsappStatus = 'initializing' | 'qr_needed' | 'connected' | 'disconnected';
 
+// whatsapp-web.js doet intern `page.goto(WhatsWebURL, { timeout: 0 })` — dat is
+// een ONBEGRENSDE wachttijd. Als de pagina om wat voor reden dan ook niet volledig
+// laadt (trage/geblokkeerde verbinding met web.whatsapp.com), blijft `client.initialize()`
+// voor altijd hangen en komt de status nooit meer uit 'initializing'. Wij bewaken
+// dat zelf met een harde timeout zodat de admin het altijd opnieuw kan proberen.
+const INIT_TIMEOUT_MS = 45_000;
+
 // Singleton state — global zodat hot reload in dev de client niet herstelt
 declare global {
   var __wa_client: Client | undefined;
@@ -132,6 +139,22 @@ export function initWhatsappClient(): void {
         '--no-first-run',
         '--no-zygote',
         '--disable-gpu',
+        // Scheelt merkbaar in opstarttijd: Chrome hoeft geen achtergronddiensten
+        // op te starten die we in een headless/serveromgeving toch niet gebruiken.
+        '--disable-extensions',
+        '--disable-background-networking',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-sync',
+        '--disable-default-apps',
+        '--disable-hang-monitor',
+        '--disable-client-side-phishing-detection',
+        '--disable-component-update',
+        '--disable-domain-reliability',
+        '--disable-prompt-on-repost',
+        '--metrics-recording-only',
+        '--mute-audio',
       ],
     },
   });
@@ -203,12 +226,39 @@ export function initWhatsappClient(): void {
     process.once('SIGINT',  () => shutdown('SIGINT'));
   }
 
-  client.initialize().catch((err: Error) => {
-    console.error('[WhatsApp] Initialisatie mislukt:', err.message);
+  // Vangnet-timeout: whatsapp-web.js kan intern onbeperkt blijven hangen (zie
+  // toelichting bij INIT_TIMEOUT_MS). Zonder dit zou de status voor altijd op
+  // 'initializing' blijven staan en kon een admin nooit meer opnieuw verbinden
+  // zonder de server te herstarten.
+  let settled = false;
+  const timeoutId = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    console.error(`[WhatsApp] Verbinden duurde langer dan ${INIT_TIMEOUT_MS / 1000}s — geforceerd afgebroken`);
     globalThis.__wa_status = 'disconnected';
-    globalThis.__wa_error = `Initialisatie mislukt: ${err.message}`;
+    globalThis.__wa_error = `Verbinden duurde te lang (langer dan ${INIT_TIMEOUT_MS / 1000} seconden). Probeer het opnieuw.`;
     globalThis.__wa_init = false;
-  });
+    globalThis.__wa_client = undefined;
+    // Best effort opruimen — de browser/pagina kan zelf ook vastzitten,
+    // dus we wachten hier niet op en negeren fouten.
+    client.destroy().catch(() => {});
+  }, INIT_TIMEOUT_MS);
+
+  client.initialize()
+    .then(() => {
+      if (settled) return; // timeout won al — deze late success negeren we
+      settled = true;
+      clearTimeout(timeoutId);
+    })
+    .catch((err: Error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      console.error('[WhatsApp] Initialisatie mislukt:', err.message);
+      globalThis.__wa_status = 'disconnected';
+      globalThis.__wa_error = `Initialisatie mislukt: ${err.message}`;
+      globalThis.__wa_init = false;
+    });
 }
 
 /**

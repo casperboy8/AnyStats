@@ -15,6 +15,7 @@ type Member = {
 
 type SessionUser = { id: number; username: string; role: string };
 type Invite = { id: string; code: string; role: string; use_count: number; max_uses: number | null; expires_at: string | null; created_by_username: string };
+type UserSuggestion = { id: number; username: string; display_name: string; email: string };
 
 export default function OrgMembersPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -27,6 +28,8 @@ export default function OrgMembersPage() {
   const [addRole, setAddRole] = useState<'member' | 'admin' | 'owner'>('member');
   const [addError, setAddError] = useState('');
   const [addLoading, setAddLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<UserSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [invites, setInvites] = useState<Invite[]>([]);
   const [inviteRole, setInviteRole] = useState<'member' | 'admin'>('member');
@@ -62,6 +65,25 @@ export default function OrgMembersPage() {
   }, [slug]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Zoeksuggesties (naam/gebruikersnaam/email), gedebounced terwijl je typt
+  useEffect(() => {
+    const q = addUsername.trim();
+    if (q.length < 2) { setSuggestions([]); return; }
+    const timer = setTimeout(() => {
+      fetch(`/api/users/search?q=${encodeURIComponent(q)}`)
+        .then(r => (r.ok ? r.json() : []))
+        .then(data => setSuggestions(Array.isArray(data) ? data : []))
+        .catch(() => setSuggestions([]));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [addUsername]);
+
+  function pickSuggestion(u: UserSuggestion) {
+    setAddUsername(u.username);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }
 
   async function addMember() {
     setAddError(''); setAddLoading(true);
@@ -150,13 +172,33 @@ export default function OrgMembersPage() {
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
           <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Lid toevoegen</h2>
           <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={addUsername}
-              onChange={e => setAddUsername(e.target.value)}
-              placeholder="Gebruikersnaam"
-              className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
-            />
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={addUsername}
+                onChange={e => { setAddUsername(e.target.value); setShowSuggestions(true); }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                placeholder="Naam, gebruikersnaam of email..."
+                autoComplete="off"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+                  {suggestions.map(u => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onMouseDown={() => pickSuggestion(u)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between gap-2"
+                    >
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{u.display_name}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{u.email}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {addableRoles.length > 1 && (
               <select
                 value={addRole}

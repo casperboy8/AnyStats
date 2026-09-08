@@ -19,6 +19,13 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState('');
+
   useEffect(() => {
     fetch('/api/profile')
       .then(r => r.json())
@@ -51,6 +58,35 @@ export default function ProfilePage() {
     setSuccess('Opgeslagen ✓');
   }
 
+  async function changePassword() {
+    setPwError(''); setPwSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setPwError('Wachtwoorden komen niet overeen');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPwError('Nieuw wachtwoord moet minimaal 6 tekens zijn');
+      return;
+    }
+
+    setPwSaving(true);
+    const res = await fetch('/api/profile/password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    });
+    const data = await res.json();
+    setPwSaving(false);
+
+    if (!res.ok) {
+      setPwError(data.error ?? 'Wijzigen mislukt');
+      return;
+    }
+    setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+    setPwSuccess('Wachtwoord gewijzigd ✓');
+  }
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="text-amber-600">Laden...</div>
@@ -71,6 +107,52 @@ export default function ProfilePage() {
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Email</p>
           <p className="text-sm text-gray-700 dark:text-gray-300">{profile?.email}</p>
         </div>
+      </div>
+
+      {/* Wachtwoord wijzigen */}
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-4 mb-6">
+        <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          🔒 Wachtwoord wijzigen
+        </h2>
+
+        <div>
+          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Huidig wachtwoord</label>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={e => setCurrentPassword(e.target.value)}
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Nieuw wachtwoord</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">Bevestig nieuw wachtwoord</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100"
+          />
+        </div>
+
+        {pwError && <p className="text-red-500 text-sm">{pwError}</p>}
+        {pwSuccess && <p className="text-green-600 text-sm">{pwSuccess}</p>}
+
+        <button
+          onClick={changePassword}
+          disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
+          className="w-full bg-gray-900 dark:bg-white hover:bg-gray-700 disabled:opacity-50 text-white dark:text-gray-900 font-medium py-2.5 rounded-lg text-sm transition-colors"
+        >
+          {pwSaving ? 'Bezig...' : 'Wachtwoord wijzigen'}
+        </button>
       </div>
 
       {/* WhatsApp instellingen */}

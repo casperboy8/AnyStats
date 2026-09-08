@@ -61,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     }
   }
 
-  const user = db.prepare('SELECT id FROM users WHERE username = ?').get(username.trim()) as { id: number } | undefined;
+  const user = db.prepare('SELECT id FROM users WHERE LOWER(username) = LOWER(?)').get(username.trim()) as { id: number } | undefined;
   if (!user) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });
 
   const existing = getOrgMembership(org.id, user.id);

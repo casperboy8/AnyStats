@@ -64,6 +64,10 @@ export default function AdminPage() {
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">📱 WhatsApp</h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Verbinding, QR-code, testbericht</p>
         </Link>
+        <Link href="/admin/barf" className="block bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors group">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">🤮 Barf</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Registraties aanpassen, verwijderen</p>
+        </Link>
       </div>
       <p className="mt-8 text-xs text-gray-400 dark:text-gray-600">v2026-06-10b</p>
     </div>

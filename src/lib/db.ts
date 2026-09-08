@@ -115,6 +115,9 @@ for (const sql of [
   // Naam-velden
   "ALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT ''",
   "ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT ''",
+  // Wachtwoord-reset (forgot-password flow)
+  'ALTER TABLE users ADD COLUMN reset_token_hash TEXT',
+  'ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME',
 ]) {
   try { db.exec(sql); } catch { /* bestaat al */ }
 }
@@ -131,6 +134,8 @@ export type User = {
   phone_number: string | null;
   phone_verified: number;           // 0 = nee, 1 = ja
   whatsapp_notifications: number;   // 0 = uit, 1 = aan
+  reset_token_hash: string | null;
+  reset_token_expires_at: string | null;
   created_at: string;
 };
 
