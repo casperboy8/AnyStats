@@ -120,6 +120,10 @@ for (const sql of [
   'ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME',
   // Accepteren/weigeren van een any via WhatsApp-linkje, zonder in te loggen
   'ALTER TABLE anytimers ADD COLUMN accept_token_hash TEXT',
+  // Wie de any heeft aangemaakt (gever of ontvanger) — bepaalt wie 'm moet
+  // bevestigen: de ANDERE partij. NULL bij oude rijen betekent "de gever",
+  // zoals het altijd was voordat je 'm ook als ontvanger kon vastleggen.
+  'ALTER TABLE anytimers ADD COLUMN created_by INTEGER REFERENCES users(id)',
 ]) {
   try { db.exec(sql); } catch { /* bestaat al */ }
 }
@@ -153,6 +157,7 @@ export type Anytimer = {
   proof_url: string | null;
   organisation_id: string | null;
   accept_token_hash: string | null;
+  created_by: number | null;
 };
 
 export type Organisation = {

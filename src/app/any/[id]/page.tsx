@@ -8,7 +8,8 @@ type AnytimerInfo = {
   id: number;
   reason: string;
   status: 'pending' | 'active' | 'inzetten_pending' | 'completed';
-  giverName: string;
+  confirmerRole: 'receiver' | 'giver';
+  otherUserName: string;
 };
 
 export default function PublicAnytimerPage() {
@@ -72,24 +73,30 @@ export default function PublicAnytimerPage() {
   }
 
   const alreadyResolved = info.status !== 'pending';
+  const isReceiver = info.confirmerRole === 'receiver';
 
   return (
     <div className="max-w-md mx-auto px-4 py-16">
       <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 text-center">
         <p className="text-3xl mb-3">🍺</p>
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-          {info.giverName} wil je een anytimer geven
+          {isReceiver
+            ? `${info.otherUserName} wil je een anytimer geven`
+            : `${info.otherUserName} zegt dat jij hem/haar een anytimer hebt gegeven`}
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm italic mb-6">&quot;{info.reason}&quot;</p>
 
         {result === 'accepted' ? (
-          <p className="text-green-600 font-medium text-sm">✓ Geaccepteerd!</p>
+          <p className="text-green-600 font-medium text-sm">✓ {isReceiver ? 'Geaccepteerd!' : 'Bevestigd!'}</p>
         ) : result === 'declined' ? (
-          <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Geweigerd.</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{isReceiver ? 'Geweigerd.' : 'Afgewezen.'}</p>
         ) : alreadyResolved ? (
           <p className="text-gray-400 dark:text-gray-500 text-sm">Deze any is al beantwoord — dat kan al op een ander apparaat zijn gedaan.</p>
         ) : (
           <>
+            {!isReceiver && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Klopt dat?</p>
+            )}
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 text-sm px-3 py-2 rounded-lg mb-4">
                 {error}
@@ -102,14 +109,14 @@ export default function PublicAnytimerPage() {
                 className={`flex-1 border py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50
                   ${preferredAction === 'decline' ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
               >
-                {acting === 'decline' ? 'Bezig…' : '❌ Weigeren'}
+                {acting === 'decline' ? 'Bezig…' : isReceiver ? '❌ Weigeren' : '❌ Afwijzen'}
               </button>
               <button
                 onClick={() => act('accept')}
                 disabled={acting !== null}
                 className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
               >
-                {acting === 'accept' ? 'Bezig…' : '✅ Accepteren'}
+                {acting === 'accept' ? 'Bezig…' : isReceiver ? '✅ Accepteren' : '✅ Bevestigen'}
               </button>
             </div>
           </>

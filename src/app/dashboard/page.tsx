@@ -15,6 +15,8 @@ type Anytimer = {
   giver_username: string;
   receiver_username: string;
   proof_url: string | null;
+  /** Wie 'm moet bevestigen — de partij die 'm niet zelf heeft aangemaakt. */
+  confirmer_id: number;
 };
 
 type Person = { id: number; username: string; ontvangen_totaal_global: number };
@@ -37,7 +39,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const [newModal, setNewModal] = useState(false);
-  const [newForm, setNewForm] = useState({ receiver_id: '', reason: '' });
+  const [newForm, setNewForm] = useState({ counterpart_id: '', reason: '', direction: 'given' as 'given' | 'received' });
   const [newError, setNewError] = useState('');
   const [newLoading, setNewLoading] = useState(false);
 
@@ -80,9 +82,9 @@ export default function DashboardPage() {
 
     router.replace('/dashboard', { scroll: false });
 
-    if (action === 'accept' && anytimer.receiver_id === session.id && anytimer.status === 'pending') {
+    if (action === 'accept' && anytimer.confirmer_id === session.id && anytimer.status === 'pending') {
       accept(anytimerId);
-    } else if (action === 'decline' && anytimer.receiver_id === session.id && anytimer.status === 'pending') {
+    } else if (action === 'decline' && anytimer.confirmer_id === session.id && anytimer.status === 'pending') {
       decline(anytimerId);
     } else if (action === 'upload' && anytimer.receiver_id === session.id && anytimer.status === 'inzetten_pending') {
       setUploadModal(anytimer);
@@ -99,17 +101,23 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
+  function openNewModal(direction: 'given' | 'received') {
+    setNewForm({ counterpart_id: '', reason: '', direction });
+    setNewError('');
+    setNewModal(true);
+  }
+
   async function createAnytimer() {
     setNewError(''); setNewLoading(true);
     const res = await fetch('/api/dashboard/anytimers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ receiver_id: Number(newForm.receiver_id), reason: newForm.reason }),
+      body: JSON.stringify({ counterpart_id: Number(newForm.counterpart_id), reason: newForm.reason, direction: newForm.direction }),
     });
     const data = await res.json();
     setNewLoading(false);
     if (!res.ok) { setNewError(data.error); return; }
-    setNewModal(false); setNewForm({ receiver_id: '', reason: '' }); load();
+    setNewModal(false); load();
   }
 
   async function accept(id: number) { await fetch(`/api/anytimers/${id}/accept`, { method: 'POST' }); load(); }
@@ -200,7 +208,13 @@ export default function DashboardPage() {
             🤮 Barf
           </button>
           <button
-            onClick={() => setNewModal(true)}
+            onClick={() => openNewModal('received')}
+            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
+          >
+            + Ontvangen
+          </button>
+          <button
+            onClick={() => openNewModal('given')}
             className="bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
           >
             + Geven
@@ -219,18 +233,21 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-2.5">
               {pendingOntvangen.map(a => (
-                <div key={a.id} className="bg-white dark:bg-gray-900 shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 rounded-xl p-3.5">
+                <div key={a.id} className={`bg-white dark:bg-gray-900 shadow-sm ring-1 ring-gray-100 dark:ring-gray-800 rounded-xl p-3.5 ${a.confirmer_id === myId ? '' : 'opacity-50'}`}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
                       <span className={`text-sm font-medium ${achievementMap.get(a.giver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.giver_username}</span>
                       <AchievementBadge tier={achievementMap.get(a.giver_id) ?? null} />
                       <span className="text-gray-400 dark:text-gray-500">·</span>
                       <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
+                      {a.confirmer_id !== myId && <span className="text-xs text-gray-400 dark:text-gray-500">wacht op bevestiging</span>}
                     </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <button onClick={() => accept(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Accepteer</button>
-                      <button onClick={() => decline(a.id)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded transition-colors">Weiger</button>
-                    </div>
+                    {a.confirmer_id === myId && (
+                      <div className="flex gap-1.5 shrink-0">
+                        <button onClick={() => accept(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Accepteer</button>
+                        <button onClick={() => decline(a.id)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded transition-colors">Weiger</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -273,13 +290,21 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-2.5">
               {pendingVerzonden.map(a => (
-                <div key={a.id} className="bg-white dark:bg-gray-900 ring-1 ring-gray-100 dark:ring-gray-800 rounded-xl p-3.5 opacity-50">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`text-sm font-medium ${achievementMap.get(a.receiver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.receiver_username}</span>
-                    <AchievementBadge tier={achievementMap.get(a.receiver_id) ?? null} />
-                    <span className="text-gray-400 dark:text-gray-500">·</span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">wacht op acceptatie</span>
+                <div key={a.id} className={`bg-white dark:bg-gray-900 ring-1 ring-gray-100 dark:ring-gray-800 rounded-xl p-3.5 ${a.confirmer_id === myId ? 'shadow-sm' : 'opacity-50'}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-sm font-medium ${achievementMap.get(a.receiver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.receiver_username}</span>
+                      <AchievementBadge tier={achievementMap.get(a.receiver_id) ?? null} />
+                      <span className="text-gray-400 dark:text-gray-500">·</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
+                      {a.confirmer_id !== myId && <span className="text-xs text-gray-400 dark:text-gray-500">wacht op acceptatie</span>}
+                    </div>
+                    {a.confirmer_id === myId && (
+                      <div className="flex gap-1.5 shrink-0">
+                        <button onClick={() => accept(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Bevestigen</button>
+                        <button onClick={() => decline(a.id)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded transition-colors">Afwijzen</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -422,14 +447,16 @@ export default function DashboardPage() {
       </div>
     </div>
 
-      {/* Geven modal */}
-      <Modal open={newModal} onClose={() => { setNewModal(false); setNewError(''); }} title="Anytimer geven">
+      {/* Geven/ontvangen modal — maakt niet uit wie van de twee 'm intypt, de ander bevestigt 'm */}
+      <Modal open={newModal} onClose={() => { setNewModal(false); setNewError(''); }} title={newForm.direction === 'given' ? 'Anytimer geven' : 'Anytimer ontvangen'}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Aan wie?</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              {newForm.direction === 'given' ? 'Aan wie?' : 'Van wie?'}
+            </label>
             <select
-              value={newForm.receiver_id}
-              onChange={e => setNewForm(f => ({ ...f, receiver_id: e.target.value }))}
+              value={newForm.counterpart_id}
+              onChange={e => setNewForm(f => ({ ...f, counterpart_id: e.target.value }))}
               className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-800 dark:text-gray-100"
             >
               <option value="">Kies een persoon...</option>
@@ -446,10 +473,13 @@ export default function DashboardPage() {
               className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             />
           </div>
+          {newForm.direction === 'received' && (
+            <p className="text-xs text-gray-400 dark:text-gray-500">Deze persoon krijgt een melding om te bevestigen dat het klopt.</p>
+          )}
           {newError && <p className="text-red-500 text-sm">{newError}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={() => { setNewModal(false); setNewError(''); }} className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 py-2.5 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuleren</button>
-            <button onClick={createAnytimer} disabled={newLoading || !newForm.receiver_id || !newForm.reason} className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
+            <button onClick={createAnytimer} disabled={newLoading || !newForm.counterpart_id || !newForm.reason} className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors">
               {newLoading ? 'Bezig...' : 'Versturen'}
             </button>
           </div>

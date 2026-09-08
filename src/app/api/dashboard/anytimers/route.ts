@@ -3,7 +3,7 @@ import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { getSharedOrgId } from '@/lib/org';
 import { sendPushToUser, createNotification } from '@/lib/push';
-import { notifyAnyReceived } from '@/lib/whatsapp/notifications';
+import { notifyAnyPendingConfirmation } from '@/lib/whatsapp/notifications';
 import { createAnytimerToken } from '@/lib/anytimer-token';
 import type { Organisation } from '@/lib/db';
 
@@ -15,7 +15,8 @@ export async function GET() {
   const anytimers = db.prepare(`
     SELECT a.*,
       CASE WHEN u_giver.first_name != '' THEN u_giver.first_name || ' ' || u_giver.last_name ELSE u_giver.username END AS giver_username,
-      CASE WHEN u_receiver.first_name != '' THEN u_receiver.first_name || ' ' || u_receiver.last_name ELSE u_receiver.username END AS receiver_username
+      CASE WHEN u_receiver.first_name != '' THEN u_receiver.first_name || ' ' || u_receiver.last_name ELSE u_receiver.username END AS receiver_username,
+      CASE WHEN COALESCE(a.created_by, a.giver_id) = a.giver_id THEN a.receiver_id ELSE a.giver_id END AS confirmer_id
     FROM anytimers a
     JOIN users u_giver    ON a.giver_id    = u_giver.id
     JOIN users u_receiver ON a.receiver_id = u_receiver.id
@@ -28,41 +29,51 @@ export async function GET() {
 }
 
 /**
- * Any geven aan iemand met wie je minstens 1 groep deelt — niet gebonden aan
- * één specifieke groep. organisation_id wordt gevuld met een gedeelde groep
- * (voor bestaande notificatie-links), maar telt nergens meer mee in stats.
+ * Any vastleggen met iemand met wie je minstens 1 groep deelt — niet gebonden
+ * aan één specifieke groep. Maakt niet uit wie van de twee 'm in de app zet:
+ * `direction: 'given'` betekent jij bent de gever (counterpart moet
+ * bevestigen als ontvanger), `direction: 'received'` betekent jij hebt 'm
+ * ontvangen (counterpart moet bevestigen als gever). organisation_id wordt
+ * gevuld met een gedeelde groep (voor bestaande notificatie-links), maar telt
+ * nergens meer mee in stats.
  */
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
 
-  const { receiver_id, reason } = await req.json();
-  if (!receiver_id || !reason?.trim()) return NextResponse.json({ error: 'Ontvanger en reden verplicht' }, { status: 400 });
-  if (receiver_id === session.id) return NextResponse.json({ error: 'Je kunt geen anytimer op jezelf zetten' }, { status: 400 });
+  const { counterpart_id, reason, direction } = await req.json();
+  if (!counterpart_id || !reason?.trim()) return NextResponse.json({ error: 'Persoon en reden verplicht' }, { status: 400 });
+  if (counterpart_id === session.id) return NextResponse.json({ error: 'Je kunt geen anytimer op jezelf zetten' }, { status: 400 });
+  if (direction !== 'given' && direction !== 'received') return NextResponse.json({ error: 'Ongeldige richting' }, { status: 400 });
 
-  const orgId = getSharedOrgId(session.id, receiver_id);
+  const orgId = getSharedOrgId(session.id, counterpart_id);
   if (!orgId) return NextResponse.json({ error: 'Je deelt geen groep met deze gebruiker' }, { status: 400 });
   const org = db.prepare('SELECT * FROM organisations WHERE id = ?').get(orgId) as Organisation;
 
-  const receiver = db.prepare(`SELECT id, CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username FROM users WHERE id = ?`).get(receiver_id) as { id: number; username: string } | undefined;
-  if (!receiver) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });
+  const counterpart = db.prepare(`SELECT id, CASE WHEN first_name != '' THEN first_name || ' ' || last_name ELSE username END AS username FROM users WHERE id = ?`).get(counterpart_id) as { id: number; username: string } | undefined;
+  if (!counterpart) return NextResponse.json({ error: 'Gebruiker niet gevonden' }, { status: 404 });
+
+  const giverId = direction === 'given' ? session.id : counterpart_id;
+  const receiverId = direction === 'given' ? counterpart_id : session.id;
 
   const result = db.prepare(
-    'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id) VALUES (?, ?, ?, ?, ?)'
-  ).run(session.id, receiver_id, reason.trim(), 'pending', org.id);
+    'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id, created_by) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(giverId, receiverId, reason.trim(), 'pending', org.id, session.id);
 
   const anytimerId = result.lastInsertRowid as number;
-  const message = `${session.username} wil je een anytimer geven: "${reason.trim()}"`;
-  createNotification(receiver_id, 'anytimer_request', message, anytimerId);
-  await sendPushToUser(receiver_id, {
-    title: 'Anytimer verzoek',
+  const message = direction === 'given'
+    ? `${session.username} wil je een anytimer geven: "${reason.trim()}"`
+    : `${session.username} zegt dat jij hem/haar een anytimer hebt gegeven: "${reason.trim()}"`;
+  createNotification(counterpart_id, direction === 'given' ? 'anytimer_request' : 'anytimer_claim', message, anytimerId);
+  await sendPushToUser(counterpart_id, {
+    title: direction === 'given' ? 'Anytimer verzoek' : 'Anytimer bevestigen',
     body: message,
     data: { url: `/dashboard` },
   });
 
-  // WhatsApp — fire-and-forget; token laat de ontvanger accepteren/weigeren zonder in te loggen
+  // WhatsApp — fire-and-forget; token laat de counterpart bevestigen/weigeren zonder in te loggen
   const token = createAnytimerToken(anytimerId);
-  notifyAnyReceived(receiver_id, session.username, reason.trim(), anytimerId, token).catch(() => {});
+  notifyAnyPendingConfirmation(counterpart_id, session.username, reason.trim(), anytimerId, token, direction === 'given' ? 'receiver' : 'giver').catch(() => {});
 
   return NextResponse.json({ ok: true, id: anytimerId });
 }

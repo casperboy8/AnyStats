@@ -15,6 +15,17 @@ export function getAnytimer(id: string | number): Anytimer | undefined {
   return db.prepare('SELECT * FROM anytimers WHERE id = ?').get(id) as Anytimer | undefined;
 }
 
+/**
+ * Wie een pending any moet bevestigen — altijd de partij die 'm NIET heeft
+ * aangemaakt. Je kunt een any nu net zo goed vastleggen als ontvanger ("ik heb
+ * er een van X gekregen") als als gever, het maakt niet uit wie 'm in de app
+ * zet — de ander bevestigt of weigert 'm.
+ */
+export function getConfirmerId(a: Pick<Anytimer, 'giver_id' | 'receiver_id' | 'created_by'>): number {
+  const createdBy = a.created_by ?? a.giver_id;
+  return createdBy === a.giver_id ? a.receiver_id : a.giver_id;
+}
+
 /** Zet een pending any op 'active' en licht de gever in — gedeeld tussen de ingelogde en de token-flow. */
 export async function acceptAnytimer(anytimer: Anytimer): Promise<void> {
   db.prepare('UPDATE anytimers SET status = ? WHERE id = ?').run('active', anytimer.id);

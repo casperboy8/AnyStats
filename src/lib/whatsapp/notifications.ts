@@ -25,17 +25,21 @@ function getOrgSlug(anytimerId: number): string | null {
 }
 
 /**
- * Iemand heeft jou een anytimer gegeven — accepteren of weigeren.
- * Groepen zijn er alleen om te bepalen wie je mag zien, any's zelf zijn er niet
- * aan gebonden, dus dit bericht noemt bewust geen groepsnaam. De linkjes werken
- * direct (via `token`), zonder dat je hoeft in te loggen.
+ * Er staat een nieuwe any klaar die nog bevestigd moet worden — of dat nu is
+ * omdat iemand jou een any wil GEVEN (jij bent de ontvanger/drinker), of omdat
+ * iemand zegt dat JIJ hen al een any hebt gegeven (jij bent de gever en moet
+ * dat bevestigen). Groepen zijn er alleen om te bepalen wie je mag zien, any's
+ * zelf zijn er niet aan gebonden, dus dit bericht noemt bewust geen groepsnaam.
+ * De linkjes werken direct (via `token`), zonder dat je hoeft in te loggen.
  */
-export async function notifyAnyReceived(
+export async function notifyAnyPendingConfirmation(
   toUserId: number,
   fromUserName: string,
   reason: string,
   anytimerId: number,
-  token: string
+  token: string,
+  /** Rol die `toUserId` speelt in deze any — bepaalt alleen de tekst. */
+  confirmerRole: 'receiver' | 'giver'
 ): Promise<void> {
   try {
     const phone = await getUserPhone(toUserId);
@@ -43,15 +47,20 @@ export async function notifyAnyReceived(
 
     const base = `${APP_URL}/any/${anytimerId}?token=${token}`;
 
-    const message =
-      `Hey! 👋 *${fromUserName}* wil je een anytimer geven.\n` +
-      `Reden: _"${reason}"_\n\n` +
-      `✅ Accepteren: ${base}&action=accept\n` +
-      `❌ Weigeren: ${base}&action=decline`;
+    const message = confirmerRole === 'receiver'
+      ? `Hey! 👋 *${fromUserName}* wil je een anytimer geven.\n` +
+        `Reden: _"${reason}"_\n\n` +
+        `✅ Accepteren: ${base}&action=accept\n` +
+        `❌ Weigeren: ${base}&action=decline`
+      : `Hey! 👋 *${fromUserName}* zegt dat jij hem/haar een anytimer hebt gegeven.\n` +
+        `Reden: _"${reason}"_\n\n` +
+        `Klopt dat?\n\n` +
+        `✅ Bevestigen: ${base}&action=accept\n` +
+        `❌ Afwijzen: ${base}&action=decline`;
 
     await sendWhatsappMessage(phone, message);
   } catch (err) {
-    console.error('[WhatsApp] notifyAnyReceived mislukt:', err);
+    console.error('[WhatsApp] notifyAnyPendingConfirmation mislukt:', err);
   }
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { getAnytimer, acceptAnytimer } from '@/lib/anytimers';
+import { getAnytimer, acceptAnytimer, getConfirmerId } from '@/lib/anytimers';
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -10,7 +10,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   const anytimer = getAnytimer(id);
 
   if (!anytimer) return NextResponse.json({ error: 'Anytimer niet gevonden' }, { status: 404 });
-  if (anytimer.receiver_id !== session.id) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
+  if (getConfirmerId(anytimer) !== session.id) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
   if (anytimer.status !== 'pending') return NextResponse.json({ error: 'Kan niet accepteren' }, { status: 400 });
 
   await acceptAnytimer(anytimer);
