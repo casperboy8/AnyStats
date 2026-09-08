@@ -9,12 +9,15 @@ const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
 // Altijd toegankelijk, ook met geldige sessie — een reset-link moet blijven werken
 // zelfs als je (op een ander apparaat) nog ingelogd bent.
-const alwaysPublicPaths = ['/forgot-password', '/reset-password', '/forgot-username'];
+const alwaysPublicPaths = ['/forgot-password', '/reset-password', '/forgot-username', '/any/'];
 // Alleen toegankelijk zonder geldige sessie — met sessie stuur je door naar /dashboard.
 const publicPaths = ['/login', '/register'];
 const publicApiPaths = [
   '/api/auth/login', '/api/auth/register', '/api/auth/forgot-password', '/api/auth/reset-password',
   '/api/auth/forgot-username', '/api/push/vapid-public-key', '/api/invite/', '/join',
+  // Accepteren/weigeren van een any via WhatsApp-linkje — het token in de
+  // request zelf is de authenticatie, geen sessie nodig.
+  '/api/public/anytimers/',
 ];
 
 export async function proxy(request: NextRequest) {

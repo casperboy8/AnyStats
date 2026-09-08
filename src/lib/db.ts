@@ -118,6 +118,8 @@ for (const sql of [
   // Wachtwoord-reset (forgot-password flow)
   'ALTER TABLE users ADD COLUMN reset_token_hash TEXT',
   'ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME',
+  // Accepteren/weigeren van een any via WhatsApp-linkje, zonder in te loggen
+  'ALTER TABLE anytimers ADD COLUMN accept_token_hash TEXT',
 ]) {
   try { db.exec(sql); } catch { /* bestaat al */ }
 }
@@ -150,6 +152,7 @@ export type Anytimer = {
   resolved_at: string | null;
   proof_url: string | null;
   organisation_id: string | null;
+  accept_token_hash: string | null;
 };
 
 export type Organisation = {

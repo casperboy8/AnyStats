@@ -24,26 +24,30 @@ function getOrgSlug(anytimerId: number): string | null {
   return row?.slug ?? null;
 }
 
-/** Iemand heeft jou een anytimer gegeven — accepteren of weigeren. */
+/**
+ * Iemand heeft jou een anytimer gegeven — accepteren of weigeren.
+ * Groepen zijn er alleen om te bepalen wie je mag zien, any's zelf zijn er niet
+ * aan gebonden, dus dit bericht noemt bewust geen groepsnaam. De linkjes werken
+ * direct (via `token`), zonder dat je hoeft in te loggen.
+ */
 export async function notifyAnyReceived(
   toUserId: number,
   fromUserName: string,
   reason: string,
-  orgName: string,
   anytimerId: number,
-  orgSlug: string | null
+  token: string
 ): Promise<void> {
   try {
     const phone = await getUserPhone(toUserId);
     if (!phone) return;
 
-    const base = orgSlug ? `${APP_URL}/org/${orgSlug}` : APP_URL;
+    const base = `${APP_URL}/any/${anytimerId}?token=${token}`;
 
     const message =
-      `Hey! 👋 *${fromUserName}* wil je een anytimer geven in *${orgName}*.\n` +
+      `Hey! 👋 *${fromUserName}* wil je een anytimer geven.\n` +
       `Reden: _"${reason}"_\n\n` +
-      `✅ Accepteren: ${base}?action=accept&id=${anytimerId}\n` +
-      `❌ Weigeren: ${base}?action=decline&id=${anytimerId}`;
+      `✅ Accepteren: ${base}&action=accept\n` +
+      `❌ Weigeren: ${base}&action=decline`;
 
     await sendWhatsappMessage(phone, message);
   } catch (err) {

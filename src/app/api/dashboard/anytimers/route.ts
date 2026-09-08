@@ -4,6 +4,7 @@ import db from '@/lib/db';
 import { getSharedOrgId } from '@/lib/org';
 import { sendPushToUser, createNotification } from '@/lib/push';
 import { notifyAnyReceived } from '@/lib/whatsapp/notifications';
+import { createAnytimerToken } from '@/lib/anytimer-token';
 import type { Organisation } from '@/lib/db';
 
 /** Al jouw openstaande any's, over al je groepen heen gecombineerd. */
@@ -59,8 +60,9 @@ export async function POST(req: NextRequest) {
     data: { url: `/dashboard` },
   });
 
-  // WhatsApp — fire-and-forget
-  notifyAnyReceived(receiver_id, session.username, reason.trim(), org.name, anytimerId, org.slug).catch(() => {});
+  // WhatsApp — fire-and-forget; token laat de ontvanger accepteren/weigeren zonder in te loggen
+  const token = createAnytimerToken(anytimerId);
+  notifyAnyReceived(receiver_id, session.username, reason.trim(), anytimerId, token).catch(() => {});
 
   return NextResponse.json({ ok: true, id: anytimerId });
 }

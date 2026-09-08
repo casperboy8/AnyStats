@@ -4,6 +4,7 @@ import db from '@/lib/db';
 import { getOrgMembership } from '@/lib/org';
 import { sendPushToUser, createNotification } from '@/lib/push';
 import { notifyAnyReceived } from '@/lib/whatsapp/notifications';
+import { createAnytimerToken } from '@/lib/anytimer-token';
 import type { Organisation } from '@/lib/db';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
@@ -69,8 +70,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     data: { url: `/org/${slug}` },
   });
 
-  // WhatsApp — fire-and-forget
-  notifyAnyReceived(receiver_id, session.username, reason.trim(), org.name, anytimerId, org.slug).catch(() => {});
+  // WhatsApp — fire-and-forget; token laat de ontvanger accepteren/weigeren zonder in te loggen
+  const token = createAnytimerToken(anytimerId);
+  notifyAnyReceived(receiver_id, session.username, reason.trim(), anytimerId, token).catch(() => {});
 
   return NextResponse.json({ ok: true, id: anytimerId });
 }

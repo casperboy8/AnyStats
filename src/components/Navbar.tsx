@@ -69,19 +69,19 @@ export default function Navbar({ user, orgs }: Props) {
         Dashboard
       </Link>
 
-      {currentSlug ? (
-        <>
-          <Link
-            href={`/org/${currentSlug}/leaderboard`}
-            onClick={() => setMenuOpen(false)}
-            className={mobile
-              ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === `/org/${currentSlug}/leaderboard` ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
-              : `text-sm transition-colors ${pathname === `/org/${currentSlug}/leaderboard` ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
-            }
-          >
-            Klassement
-          </Link>
+      <Link
+        href="/leaderboard"
+        onClick={() => setMenuOpen(false)}
+        className={mobile
+          ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
+          : `text-sm transition-colors ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
+        }
+      >
+        Klassement
+      </Link>
 
+      {currentSlug && (
+        <>
           {canSeeMembers && (
             <Link
               href={`/org/${currentSlug}/members`}
@@ -114,17 +114,6 @@ export default function Navbar({ user, orgs }: Props) {
             </Link>
           )}
         </>
-      ) : (
-        <Link
-          href="/leaderboard"
-          onClick={() => setMenuOpen(false)}
-          className={mobile
-            ? `block px-4 py-3 text-sm border-b border-gray-50 ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`
-            : `text-sm transition-colors ${pathname === '/leaderboard' ? 'text-amber-600 font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`
-          }
-        >
-          Klassement
-        </Link>
       )}
 
       {user.role === 'admin' && (
@@ -158,12 +147,10 @@ export default function Navbar({ user, orgs }: Props) {
 
   const bottomTabs: { href: string; label: string; active: boolean; icon: React.ReactNode }[] = [
     { href: '/dashboard', label: 'Dashboard', active: pathname === '/dashboard', icon: iconHome },
-    ...(currentSlug
-      ? [
-          { href: `/org/${currentSlug}/leaderboard`, label: 'Klassement', active: pathname === `/org/${currentSlug}/leaderboard`, icon: iconTrophy },
-          ...(canSeeMembers ? [{ href: `/org/${currentSlug}/members`, label: 'Leden', active: pathname === `/org/${currentSlug}/members`, icon: iconUsers }] : []),
-        ]
-      : [{ href: '/leaderboard', label: 'Klassement', active: pathname === '/leaderboard', icon: iconTrophy }]),
+    { href: '/leaderboard', label: 'Klassement', active: pathname === '/leaderboard', icon: iconTrophy },
+    ...(currentSlug && canSeeMembers
+      ? [{ href: `/org/${currentSlug}/members`, label: 'Leden', active: pathname === `/org/${currentSlug}/members`, icon: iconUsers }]
+      : []),
   ];
 
   return (
