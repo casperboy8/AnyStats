@@ -13,7 +13,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   if (getConfirmerId(anytimer) !== session.id) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
   if (anytimer.status !== 'pending') return NextResponse.json({ error: 'Kan niet accepteren' }, { status: 400 });
 
-  await acceptAnytimer(anytimer);
+  const ok = await acceptAnytimer(anytimer);
+  if (!ok) return NextResponse.json({ error: 'Deze any is al beantwoord' }, { status: 400 });
 
   return NextResponse.json({ ok: true });
 }

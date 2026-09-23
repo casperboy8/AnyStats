@@ -150,7 +150,7 @@ export type Anytimer = {
   giver_id: number;
   receiver_id: number;
   reason: string;
-  status: 'pending' | 'active' | 'inzetten_pending' | 'completed';
+  status: 'pending' | 'active' | 'inzetten_pending' | 'completed' | 'declined';
   created_at: string;
   activated_at: string | null;
   resolved_at: string | null;

@@ -22,6 +22,23 @@ type Anytimer = {
 
 type User = { id: number; username: string; ontvangen_totaal_global: number };
 type SessionUser = { id: number; username: string; role: string };
+type AnytimerGroup = { personId: number; personName: string; items: Anytimer[] };
+
+/** Groepeert een lijst any's per tegenpartij, zodat je per persoon één rij ziet i.p.v. één rij per any. */
+const STATUS_PRIORITY = ['pending', 'inzetten_pending', 'active'];
+function groupByPerson(items: Anytimer[], personIdOf: (a: Anytimer) => number, personNameOf: (a: Anytimer) => string): AnytimerGroup[] {
+  const map = new Map<number, AnytimerGroup>();
+  for (const a of items) {
+    const id = personIdOf(a);
+    let g = map.get(id);
+    if (!g) { g = { personId: id, personName: personNameOf(a), items: [] }; map.set(id, g); }
+    g.items.push(a);
+  }
+  for (const g of map.values()) {
+    g.items.sort((a, b) => STATUS_PRIORITY.indexOf(a.status) - STATUS_PRIORITY.indexOf(b.status));
+  }
+  return [...map.values()].sort((a, b) => b.items.length - a.items.length);
+}
 
 export default function OrgDashboardPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -35,7 +52,7 @@ export default function OrgDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const [newModal, setNewModal] = useState(false);
-  const [newForm, setNewForm] = useState({ counterpart_id: '', reason: '', direction: 'given' as 'given' | 'received' });
+  const [newForm, setNewForm] = useState({ counterpart_id: '', reason: '', direction: 'given' as 'given' | 'received', count: 1 });
   const [newError, setNewError] = useState('');
   const [newLoading, setNewLoading] = useState(false);
 
@@ -49,6 +66,24 @@ export default function OrgDashboardPage() {
   const [barfUserId, setBarfUserId] = useState('');
   const [barfLoading, setBarfLoading] = useState(false);
   const [barfError, setBarfError] = useState('');
+
+  const [expandedGivers, setExpandedGivers] = useState<Set<number>>(new Set());
+  const [expandedReceivers, setExpandedReceivers] = useState<Set<number>>(new Set());
+
+  function toggleGiver(id: number) {
+    setExpandedGivers(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function toggleReceiver(id: number) {
+    setExpandedReceivers(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   const load = useCallback(async () => {
     const [meRes, anyRes, usersRes, orgRes] = await Promise.all([
@@ -97,7 +132,7 @@ export default function OrgDashboardPage() {
   }, [slug]);
 
   function openNewModal(direction: 'given' | 'received') {
-    setNewForm({ counterpart_id: '', reason: '', direction });
+    setNewForm({ counterpart_id: '', reason: '', direction, count: 1 });
     setNewError('');
     setNewModal(true);
   }
@@ -107,7 +142,7 @@ export default function OrgDashboardPage() {
     const res = await fetch(`/api/org/${slug}/anytimers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ counterpart_id: Number(newForm.counterpart_id), reason: newForm.reason, direction: newForm.direction }),
+      body: JSON.stringify({ counterpart_id: Number(newForm.counterpart_id), reason: newForm.reason, direction: newForm.direction, count: newForm.count }),
     });
     const data = await res.json();
     setNewLoading(false);
@@ -164,13 +199,86 @@ export default function OrgDashboardPage() {
   const achievementMap = new Map<number, AchievementTier | null>(
     users.map(u => [u.id, getAchievementTier(u.ontvangen_totaal_global)])
   );
-  const opMij = anytimers.filter(a => a.receiver_id === myId && a.status !== 'completed');
-  const vanMij = anytimers.filter(a => a.giver_id === myId && a.status !== 'completed');
-  const pendingOntvangen = opMij.filter(a => a.status === 'pending');
-  const activeOpMij = opMij.filter(a => ['active', 'inzetten_pending'].includes(a.status));
-  const pendingVerzonden = vanMij.filter(a => a.status === 'pending');
-  const activeVanMij = vanMij.filter(a => ['active', 'inzetten_pending'].includes(a.status));
+  const opMij = anytimers.filter(a => a.receiver_id === myId && a.status !== 'completed' && a.status !== 'declined');
+  const vanMij = anytimers.filter(a => a.giver_id === myId && a.status !== 'completed' && a.status !== 'declined');
+  const opMijGroups = groupByPerson(opMij, a => a.giver_id, a => a.giver_username);
+  const vanMijGroups = groupByPerson(vanMij, a => a.receiver_id, a => a.receiver_username);
   const othersInOrg = users.filter(u => u.id !== myId);
+
+  function renderOpMijItem(a: Anytimer) {
+    if (a.status === 'pending') {
+      return (
+        <div key={a.id} className={`p-3 ${a.confirmer_id === myId ? '' : 'opacity-50'}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
+              {a.confirmer_id !== myId && <span className="text-xs text-gray-400 dark:text-gray-500">wacht op bevestiging</span>}
+            </div>
+            {a.confirmer_id === myId && (
+              <div className="flex gap-1.5 shrink-0">
+                <button onClick={() => accept(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Accepteer</button>
+                <button onClick={() => decline(a.id)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded transition-colors">Weiger</button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div key={a.id} className="p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="min-w-0 text-sm text-gray-500 dark:text-gray-400 truncate">{a.reason}</span>
+          {a.status === 'inzetten_pending' && (
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-semibold text-red-500">Drink nu</span>
+              <button
+                onClick={() => { setUploadModal(a); setUploadFile(null); setUploadError(''); }}
+                className={`text-xs font-medium px-2.5 py-1 rounded transition-colors ${a.proof_url ? 'border border-green-300 text-green-700 hover:bg-green-50' : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              >
+                {a.proof_url ? 'Bewijs ✓' : 'Bewijs'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  function renderVanMijItem(a: Anytimer) {
+    if (a.status === 'pending') {
+      return (
+        <div key={a.id} className={`p-3 ${a.confirmer_id === myId ? '' : 'opacity-50'}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
+              {a.confirmer_id !== myId && <span className="text-xs text-gray-400 dark:text-gray-500">wacht op acceptatie</span>}
+            </div>
+            {a.confirmer_id === myId && (
+              <div className="flex gap-1.5 shrink-0">
+                <button onClick={() => accept(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Bevestigen</button>
+                <button onClick={() => decline(a.id)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded transition-colors">Afwijzen</button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div key={a.id} className="p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="min-w-0 text-sm text-gray-500 dark:text-gray-400 truncate">{a.reason}</span>
+          <div className="shrink-0">
+            {a.status === 'active' && (
+              <button onClick={() => inzetten(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Inzetten</button>
+            )}
+            {a.status === 'inzetten_pending' && (
+              <button onClick={() => setBevestigenModal(a)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded transition-colors">Bevestigen</button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -196,13 +304,13 @@ export default function OrgDashboardPage() {
             onClick={() => openNewModal('received')}
             className="border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
           >
-            + Ontvangen
+            🍺 Ik drink
           </button>
           <button
             onClick={() => openNewModal('given')}
             className="bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
           >
-            + Geven
+            🍺 Iemand drinkt
           </button>
         </div>
       </div>
@@ -213,52 +321,40 @@ export default function OrgDashboardPage() {
             <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100">Op mij</h2>
             <span className="text-xs text-gray-400 dark:text-gray-500">{opMij.length}</span>
           </div>
-          {pendingOntvangen.length === 0 && activeOpMij.length === 0 ? (
+          {opMijGroups.length === 0 ? (
             <p className="text-sm text-gray-400 dark:text-gray-500 py-2">Leeg</p>
           ) : (
             <div className="space-y-2">
-              {pendingOntvangen.map(a => (
-                <div key={a.id} className={`bg-white dark:bg-gray-900 border rounded-lg p-3 ${a.confirmer_id === myId ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800 opacity-50'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-sm font-medium ${achievementMap.get(a.giver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.giver_username}</span>
-                      <AchievementBadge tier={achievementMap.get(a.giver_id) ?? null} />
-                      <span className="text-gray-400 dark:text-gray-500">·</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
-                      {a.confirmer_id !== myId && <span className="text-xs text-gray-400 dark:text-gray-500">wacht op bevestiging</span>}
-                    </div>
-                    {a.confirmer_id === myId && (
-                      <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => accept(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Accepteer</button>
-                        <button onClick={() => decline(a.id)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded transition-colors">Weiger</button>
+              {opMijGroups.map(g => {
+                const isOpen = expandedGivers.has(g.personId);
+                const needsAction = g.items.some(a => a.status === 'pending' && a.confirmer_id === myId)
+                  || g.items.some(a => a.status === 'inzetten_pending');
+                return (
+                  <div key={g.personId} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleGiver(g.personId)}
+                      className="w-full flex items-center justify-between gap-3 p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-sm font-medium ${achievementMap.get(g.personId)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{g.personName}</span>
+                        <AchievementBadge tier={achievementMap.get(g.personId) ?? null} />
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {activeOpMij.map(a => (
-                <div key={a.id} className={`bg-white dark:bg-gray-900 border rounded-lg p-3 ${a.status === 'inzetten_pending' ? 'border-red-200 dark:border-red-800' : 'border-gray-200 dark:border-gray-700'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-sm font-medium ${achievementMap.get(a.giver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.giver_username}</span>
-                      <AchievementBadge tier={achievementMap.get(a.giver_id) ?? null} />
-                      <span className="text-gray-400 dark:text-gray-500">·</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
-                    </div>
-                    {a.status === 'inzetten_pending' && (
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs font-semibold text-red-500">Drink nu</span>
-                        <button
-                          onClick={() => { setUploadModal(a); setUploadFile(null); setUploadError(''); }}
-                          className={`text-xs font-medium px-2.5 py-1 rounded transition-colors ${a.proof_url ? 'border border-green-300 text-green-700 hover:bg-green-50' : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                        >
-                          {a.proof_url ? 'Bewijs ✓' : 'Bewijs'}
-                        </button>
+                        {needsAction && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{g.items.length}x</span>
+                        <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="divide-y divide-gray-100 dark:divide-gray-800 border-t border-gray-100 dark:border-gray-800">
+                        {g.items.map(renderOpMijItem)}
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
@@ -270,60 +366,55 @@ export default function OrgDashboardPage() {
             <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100">Van mij</h2>
             <span className="text-xs text-gray-400 dark:text-gray-500">{vanMij.length}</span>
           </div>
-          {pendingVerzonden.length === 0 && activeVanMij.length === 0 ? (
+          {vanMijGroups.length === 0 ? (
             <p className="text-sm text-gray-400 dark:text-gray-500 py-2">Leeg</p>
           ) : (
             <div className="space-y-2">
-              {pendingVerzonden.map(a => (
-                <div key={a.id} className={`bg-white dark:bg-gray-900 border rounded-lg p-3 ${a.confirmer_id === myId ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800 opacity-50'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-sm font-medium ${achievementMap.get(a.receiver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.receiver_username}</span>
-                      <AchievementBadge tier={achievementMap.get(a.receiver_id) ?? null} />
-                      <span className="text-gray-400 dark:text-gray-500">·</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
-                      {a.confirmer_id !== myId && <span className="text-xs text-gray-400 dark:text-gray-500">wacht op acceptatie</span>}
-                    </div>
-                    {a.confirmer_id === myId && (
-                      <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => accept(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Bevestigen</button>
-                        <button onClick={() => decline(a.id)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 rounded transition-colors">Afwijzen</button>
+              {vanMijGroups.map(g => {
+                const isOpen = expandedReceivers.has(g.personId);
+                const needsAction = g.items.some(a => a.status === 'pending' && a.confirmer_id === myId);
+                return (
+                  <div key={g.personId} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleReceiver(g.personId)}
+                      className="w-full flex items-center justify-between gap-3 p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-sm font-medium ${achievementMap.get(g.personId)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{g.personName}</span>
+                        <AchievementBadge tier={achievementMap.get(g.personId) ?? null} />
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {needsAction && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{g.items.length}x</span>
+                        <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="divide-y divide-gray-100 dark:divide-gray-800 border-t border-gray-100 dark:border-gray-800">
+                        {g.items.map(renderVanMijItem)}
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
-              {activeVanMij.map(a => (
-                <div key={a.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-sm font-medium ${achievementMap.get(a.receiver_id)?.nameClasses ?? 'text-gray-900 dark:text-gray-100'}`}>{a.receiver_username}</span>
-                      <AchievementBadge tier={achievementMap.get(a.receiver_id) ?? null} />
-                      <span className="text-gray-400 dark:text-gray-500">·</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{a.reason}</span>
-                    </div>
-                    <div className="shrink-0">
-                      {a.status === 'active' && (
-                        <button onClick={() => inzetten(a.id)} className="text-xs font-medium px-2.5 py-1 bg-gray-900 dark:bg-white hover:bg-gray-700 text-white dark:text-gray-900 rounded transition-colors">Inzetten</button>
-                      )}
-                      {a.status === 'inzetten_pending' && (
-                        <button onClick={() => setBevestigenModal(a)} className="text-xs font-medium px-2.5 py-1 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded transition-colors">Bevestigen</button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
       </div>
 
       {/* Geven/ontvangen modal — maakt niet uit wie van de twee 'm intypt, de ander bevestigt 'm */}
-      <Modal open={newModal} onClose={() => { setNewModal(false); setNewError(''); }} title={newForm.direction === 'given' ? 'Anytimer geven' : 'Anytimer ontvangen'}>
+      <Modal open={newModal} onClose={() => { setNewModal(false); setNewError(''); }} title={newForm.direction === 'given' ? 'Iemand moet drinken' : 'Ik moet drinken'}>
         <div className="space-y-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2.5">
+            {newForm.direction === 'given'
+              ? 'Jij zegt dat iemand anders moet drinken. Die persoon krijgt een melding en moet dit zelf bevestigen.'
+              : 'Jij zegt dat jij van iemand moet drinken. Die persoon krijgt een melding en moet dit zelf bevestigen.'}
+          </p>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              {newForm.direction === 'given' ? 'Aan wie?' : 'Van wie?'}
+              {newForm.direction === 'given' ? 'Wie moet er drinken?' : 'Van wie kreeg je \'m?'}
             </label>
             <select
               value={newForm.counterpart_id}
@@ -335,7 +426,7 @@ export default function OrgDashboardPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Reden</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Waarom?</label>
             <input
               type="text"
               value={newForm.reason}
@@ -344,9 +435,29 @@ export default function OrgDashboardPage() {
               className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             />
           </div>
-          {newForm.direction === 'received' && (
-            <p className="text-xs text-gray-400 dark:text-gray-500">Deze persoon krijgt een melding om te bevestigen dat het klopt.</p>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Hoe vaak?</label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setNewForm(f => ({ ...f, count: Math.max(1, f.count - 1) }))}
+                className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-lg font-medium transition-colors"
+              >
+                −
+              </button>
+              <span className="w-8 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">{newForm.count}</span>
+              <button
+                type="button"
+                onClick={() => setNewForm(f => ({ ...f, count: Math.min(20, f.count + 1) }))}
+                className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-lg font-medium transition-colors"
+              >
+                +
+              </button>
+              {newForm.count > 1 && (
+                <span className="text-xs text-gray-400 dark:text-gray-500">{newForm.count}x dezelfde reden</span>
+              )}
+            </div>
+          </div>
           {newError && <p className="text-red-500 text-sm">{newError}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={() => { setNewModal(false); setNewError(''); }} className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 py-2.5 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuleren</button>

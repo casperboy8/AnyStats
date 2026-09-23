@@ -50,6 +50,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const membership = getOrgMembership(org.id, session.id);
   if (!membership || !hasMinRole(membership, 'owner')) return NextResponse.json({ error: 'Geen toegang' }, { status: 403 });
 
+  db.prepare('UPDATE anytimers SET organisation_id = NULL WHERE organisation_id = ?').run(org.id);
   db.prepare('DELETE FROM organisations WHERE id = ?').run(org.id);
 
   return NextResponse.json({ ok: true });

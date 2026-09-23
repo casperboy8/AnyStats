@@ -9,12 +9,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const { status } = await req.json();
 
-  const valid = ['pending', 'active', 'inzetten_pending', 'completed'];
+  const valid = ['pending', 'active', 'inzetten_pending', 'completed', 'declined'];
   if (!valid.includes(status)) {
     return NextResponse.json({ error: 'Ongeldig status' }, { status: 400 });
   }
 
-  db.prepare('UPDATE anytimers SET status = ? WHERE id = ?').run(status, id);
+  // Zelfde timestamp-boekhouding als de normale accept/inzetten/bevestigen/decline-flows,
+  // zodat een handmatige admin-statuswijziging geen rijen met een ontbrekende
+  // activated_at/resolved_at achterlaat.
+  const timestampColumn = status === 'inzetten_pending' ? 'activated_at'
+    : status === 'completed' || status === 'declined' ? 'resolved_at'
+    : null;
+
+  db.prepare(
+    `UPDATE anytimers SET status = ?${timestampColumn ? `, ${timestampColumn} = CURRENT_TIMESTAMP` : ''} WHERE id = ?`
+  ).run(status, id);
   return NextResponse.json({ ok: true });
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import db from '@/lib/db';
+import { getOrgMembership } from '@/lib/org';
 
 export async function GET() {
   const session = await getSession();
@@ -27,10 +28,17 @@ export async function POST(req: NextRequest) {
   if (!giver_id || !receiver_id || !reason) {
     return NextResponse.json({ error: 'Gever, ontvanger en reden verplicht' }, { status: 400 });
   }
+  if (giver_id === receiver_id) {
+    return NextResponse.json({ error: 'Gever en ontvanger moeten verschillend zijn' }, { status: 400 });
+  }
 
   // Gebruik de meegegeven org of zoek automatisch een gedeelde
   let orgId: string | null = organisation_id ?? null;
-  if (!orgId) {
+  if (orgId) {
+    if (!getOrgMembership(orgId, giver_id) || !getOrgMembership(orgId, receiver_id)) {
+      return NextResponse.json({ error: 'Gever en ontvanger moeten allebei lid zijn van de gekozen groep' }, { status: 400 });
+    }
+  } else {
     const sharedOrg = db.prepare(`
       SELECT om1.organisation_id
       FROM organisation_members om1

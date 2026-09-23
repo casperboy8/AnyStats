@@ -12,8 +12,15 @@ function hashToken(token: string): string {
 }
 
 export function createAnytimerToken(anytimerId: number): string {
+  return createAnytimerTokenForIds([anytimerId]);
+}
+
+/** Zelfde token voor een hele batch any's — zo kan de counterpart ze in één tik allemaal accepteren/weigeren. */
+export function createAnytimerTokenForIds(anytimerIds: number[]): string {
   const token = crypto.randomBytes(32).toString('hex');
-  db.prepare('UPDATE anytimers SET accept_token_hash = ? WHERE id = ?').run(hashToken(token), anytimerId);
+  const hash = hashToken(token);
+  const placeholders = anytimerIds.map(() => '?').join(',');
+  db.prepare(`UPDATE anytimers SET accept_token_hash = ? WHERE id IN (${placeholders})`).run(hash, ...anytimerIds);
   return token;
 }
 

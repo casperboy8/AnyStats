@@ -23,9 +23,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (anytimer.status !== 'inzetten_pending') return NextResponse.json({ error: 'Niet in afwachting' }, { status: 400 });
 
   if (goed) {
-    db.prepare(
-      'UPDATE anytimers SET status = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?'
-    ).run('completed', id);
+    const result = db.prepare(
+      "UPDATE anytimers SET status = 'completed', resolved_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'inzetten_pending'"
+    ).run(id);
+    if (result.changes === 0) return NextResponse.json({ error: 'Niet in afwachting' }, { status: 400 });
 
     const message = `Anytimer voltooid.`;
     createNotification(anytimer.receiver_id, 'anytimer_completed', message, anytimer.id);
@@ -35,7 +36,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       data: { url: '/dashboard' },
     });
   } else {
-    db.prepare('UPDATE anytimers SET status = ? WHERE id = ?').run('active', id);
+    const result = db.prepare(
+      "UPDATE anytimers SET status = 'active' WHERE id = ? AND status = 'inzetten_pending'"
+    ).run(id);
+    if (result.changes === 0) return NextResponse.json({ error: 'Niet in afwachting' }, { status: 400 });
 
     const penaltyResult = db.prepare(
       'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id) VALUES (?, ?, ?, ?, ?)'

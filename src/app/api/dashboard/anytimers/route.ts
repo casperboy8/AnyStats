@@ -4,7 +4,7 @@ import db from '@/lib/db';
 import { getSharedOrgId } from '@/lib/org';
 import { sendPushToUser, createNotification } from '@/lib/push';
 import { notifyAnyPendingConfirmation } from '@/lib/whatsapp/notifications';
-import { createAnytimerToken } from '@/lib/anytimer-token';
+import { createAnytimerTokenForIds } from '@/lib/anytimer-token';
 import type { Organisation } from '@/lib/db';
 
 /** Al jouw openstaande any's, over al je groepen heen gecombineerd. */
@@ -21,7 +21,7 @@ export async function GET() {
     JOIN users u_giver    ON a.giver_id    = u_giver.id
     JOIN users u_receiver ON a.receiver_id = u_receiver.id
     WHERE (a.giver_id = ? OR a.receiver_id = ?)
-      AND a.status != 'completed'
+      AND a.status NOT IN ('completed', 'declined')
     ORDER BY a.created_at DESC
   `).all(session.id, session.id);
 
@@ -41,10 +41,11 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
 
-  const { counterpart_id, reason, direction } = await req.json();
+  const { counterpart_id, reason, direction, count } = await req.json();
   if (!counterpart_id || !reason?.trim()) return NextResponse.json({ error: 'Persoon en reden verplicht' }, { status: 400 });
   if (counterpart_id === session.id) return NextResponse.json({ error: 'Je kunt geen anytimer op jezelf zetten' }, { status: 400 });
   if (direction !== 'given' && direction !== 'received') return NextResponse.json({ error: 'Ongeldige richting' }, { status: 400 });
+  const amount = Math.min(Math.max(Math.round(Number(count) || 1), 1), 20);
 
   const orgId = getSharedOrgId(session.id, counterpart_id);
   if (!orgId) return NextResponse.json({ error: 'Je deelt geen groep met deze gebruiker' }, { status: 400 });
@@ -56,15 +57,23 @@ export async function POST(req: NextRequest) {
   const giverId = direction === 'given' ? session.id : counterpart_id;
   const receiverId = direction === 'given' ? counterpart_id : session.id;
 
-  const result = db.prepare(
+  const insert = db.prepare(
     'INSERT INTO anytimers (giver_id, receiver_id, reason, status, organisation_id, created_by) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(giverId, receiverId, reason.trim(), 'pending', org.id, session.id);
+  );
+  const anytimerIds = db.transaction(() => {
+    const ids: number[] = [];
+    for (let i = 0; i < amount; i++) {
+      const result = insert.run(giverId, receiverId, reason.trim(), 'pending', org.id, session.id);
+      ids.push(result.lastInsertRowid as number);
+    }
+    return ids;
+  })();
 
-  const anytimerId = result.lastInsertRowid as number;
+  const countLabel = amount > 1 ? `${amount}x ` : '';
   const message = direction === 'given'
-    ? `${session.username} wil je een anytimer geven: "${reason.trim()}"`
-    : `${session.username} zegt dat jij hem/haar een anytimer hebt gegeven: "${reason.trim()}"`;
-  createNotification(counterpart_id, direction === 'given' ? 'anytimer_request' : 'anytimer_claim', message, anytimerId);
+    ? `${session.username} wil je ${countLabel}een anytimer geven: "${reason.trim()}"`
+    : `${session.username} zegt dat jij hem/haar ${countLabel}een anytimer hebt gegeven: "${reason.trim()}"`;
+  createNotification(counterpart_id, direction === 'given' ? 'anytimer_request' : 'anytimer_claim', message, anytimerIds[0]);
   await sendPushToUser(counterpart_id, {
     title: direction === 'given' ? 'Anytimer verzoek' : 'Anytimer bevestigen',
     body: message,
@@ -72,8 +81,8 @@ export async function POST(req: NextRequest) {
   });
 
   // WhatsApp — fire-and-forget; token laat de counterpart bevestigen/weigeren zonder in te loggen
-  const token = createAnytimerToken(anytimerId);
-  notifyAnyPendingConfirmation(counterpart_id, session.username, reason.trim(), anytimerId, token, direction === 'given' ? 'receiver' : 'giver').catch(() => {});
+  const token = createAnytimerTokenForIds(anytimerIds);
+  notifyAnyPendingConfirmation(counterpart_id, session.username, reason.trim(), anytimerIds, token, direction === 'given' ? 'receiver' : 'giver').catch(() => {});
 
-  return NextResponse.json({ ok: true, id: anytimerId });
+  return NextResponse.json({ ok: true, id: anytimerIds[0], ids: anytimerIds });
 }

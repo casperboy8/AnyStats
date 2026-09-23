@@ -25,7 +25,7 @@ export async function GET() {
     FROM anytimers a
     JOIN users u_giver    ON a.giver_id    = u_giver.id
     JOIN users u_receiver ON a.receiver_id = u_receiver.id
-    WHERE a.status NOT IN ('completed', 'pending')
+    WHERE a.status NOT IN ('completed', 'pending', 'declined')
       AND a.giver_id    IN (${placeholders})
       AND a.receiver_id IN (${placeholders})
     GROUP BY a.giver_id, a.receiver_id

@@ -36,7 +36,8 @@ export async function notifyAnyPendingConfirmation(
   toUserId: number,
   fromUserName: string,
   reason: string,
-  anytimerId: number,
+  /** Eén of meerdere any-id's (bij meerdere any's in één keer) — delen allemaal hetzelfde `token`. */
+  anytimerIds: number[],
   token: string,
   /** Rol die `toUserId` speelt in deze any — bepaalt alleen de tekst. */
   confirmerRole: 'receiver' | 'giver'
@@ -45,18 +46,20 @@ export async function notifyAnyPendingConfirmation(
     const phone = await getUserPhone(toUserId);
     if (!phone) return;
 
-    const base = `${APP_URL}/any/${anytimerId}?token=${token}`;
+    const count = anytimerIds.length;
+    const base = `${APP_URL}/any/${anytimerIds.join(',')}?token=${token}`;
+    const countLabel = count > 1 ? `${count}x ` : '';
 
     const message = confirmerRole === 'receiver'
-      ? `Hey! 👋 *${fromUserName}* wil je een anytimer geven.\n` +
+      ? `Hey! 👋 *${fromUserName}* wil je ${countLabel}een anytimer geven.\n` +
         `Reden: _"${reason}"_\n\n` +
-        `✅ Accepteren: ${base}&action=accept\n` +
-        `❌ Weigeren: ${base}&action=decline`
-      : `Hey! 👋 *${fromUserName}* zegt dat jij hem/haar een anytimer hebt gegeven.\n` +
+        `✅ ${count > 1 ? 'Alles accepteren' : 'Accepteren'}: ${base}&action=accept\n` +
+        `❌ ${count > 1 ? 'Alles weigeren' : 'Weigeren'}: ${base}&action=decline`
+      : `Hey! 👋 *${fromUserName}* zegt dat jij hem/haar ${countLabel}een anytimer hebt gegeven.\n` +
         `Reden: _"${reason}"_\n\n` +
         `Klopt dat?\n\n` +
-        `✅ Bevestigen: ${base}&action=accept\n` +
-        `❌ Afwijzen: ${base}&action=decline`;
+        `✅ ${count > 1 ? 'Alles bevestigen' : 'Bevestigen'}: ${base}&action=accept\n` +
+        `❌ ${count > 1 ? 'Alles afwijzen' : 'Afwijzen'}: ${base}&action=decline`;
 
     await sendWhatsappMessage(phone, message);
   } catch (err) {
@@ -69,7 +72,9 @@ export async function notifyAnyAccepted(
   toUserId: number,
   receiverName: string,
   reason: string,
-  anytimerId: number
+  anytimerId: number,
+  /** Aantal any's dat in één keer geaccepteerd is (bij meerdere any's tegelijk). */
+  count: number = 1
 ): Promise<void> {
   try {
     const phone = await getUserPhone(toUserId);
@@ -78,10 +83,13 @@ export async function notifyAnyAccepted(
     const orgSlug = getOrgSlug(anytimerId);
     const base = orgSlug ? `${APP_URL}/org/${orgSlug}` : APP_URL;
 
-    const message =
-      `✅ *${receiverName}* heeft jouw anytimer geaccepteerd!\n` +
-      `_"${reason}"_\n\n` +
-      `Bekijk de anytimer: ${base}`;
+    const message = count > 1
+      ? `✅ *${receiverName}* heeft ${count} van jouw anytimers geaccepteerd!\n` +
+        `_"${reason}"_\n\n` +
+        `Bekijk de anytimers: ${base}`
+      : `✅ *${receiverName}* heeft jouw anytimer geaccepteerd!\n` +
+        `_"${reason}"_\n\n` +
+        `Bekijk de anytimer: ${base}`;
 
     await sendWhatsappMessage(phone, message);
   } catch (err) {

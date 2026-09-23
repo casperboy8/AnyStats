@@ -19,8 +19,8 @@ export async function GET() {
     SELECT
       u.id,
       CASE WHEN u.first_name != '' THEN u.first_name || ' ' || u.last_name ELSE u.username END AS username,
-      (SELECT COUNT(*) FROM anytimers ga WHERE ga.giver_id    = u.id AND ga.status NOT IN ('completed','pending')) AS gegeven_actief,
-      (SELECT COUNT(*) FROM anytimers ga WHERE ga.receiver_id = u.id AND ga.status NOT IN ('completed','pending')) AS ontvangen_actief,
+      (SELECT COUNT(*) FROM anytimers ga WHERE ga.giver_id    = u.id AND ga.status NOT IN ('completed','pending','declined')) AS gegeven_actief,
+      (SELECT COUNT(*) FROM anytimers ga WHERE ga.receiver_id = u.id AND ga.status NOT IN ('completed','pending','declined')) AS ontvangen_actief,
       (SELECT COUNT(*) FROM anytimers ga WHERE ga.giver_id    = u.id AND ga.status = 'completed') AS gegeven_totaal,
       (SELECT COUNT(*) FROM anytimers ga WHERE ga.receiver_id = u.id AND ga.status = 'completed') AS ontvangen_totaal,
       (SELECT COUNT(*) FROM anytimers ga WHERE ga.receiver_id = u.id AND ga.status = 'completed') AS ontvangen_totaal_global,

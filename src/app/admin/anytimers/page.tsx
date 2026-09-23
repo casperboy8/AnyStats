@@ -21,6 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
   active: 'Actief',
   inzetten_pending: 'Ingezet',
   completed: 'Voltooid',
+  declined: 'Afgewezen',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -28,6 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
   inzetten_pending: 'bg-red-100 text-red-700',
   completed: 'bg-gray-100 text-gray-500',
+  declined: 'bg-gray-100 text-gray-400',
 };
 
 export default function AdminAnytimersPage() {
@@ -118,7 +120,7 @@ export default function AdminAnytimersPage() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {[['all', 'Alle'], ['active', 'Actief'], ['pending', 'Wachtend'], ['inzetten_pending', 'Ingezet'], ['completed', 'Voltooid']].map(([val, label]) => (
+        {[['all', 'Alle'], ['active', 'Actief'], ['pending', 'Wachtend'], ['inzetten_pending', 'Ingezet'], ['completed', 'Voltooid'], ['declined', 'Afgewezen']].map(([val, label]) => (
           <button
             key={val}
             onClick={() => setFilter(val)}

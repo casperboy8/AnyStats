@@ -7,9 +7,11 @@ import Link from 'next/link';
 type AnytimerInfo = {
   id: number;
   reason: string;
-  status: 'pending' | 'active' | 'inzetten_pending' | 'completed';
+  status: 'pending' | 'active' | 'inzetten_pending' | 'completed' | 'declined';
   confirmerRole: 'receiver' | 'giver';
   otherUserName: string;
+  /** Aantal any's dat dit linkje in één keer afhandelt (bij meerdere any's tegelijk). */
+  count: number;
 };
 
 export default function PublicAnytimerPage() {
@@ -74,6 +76,7 @@ export default function PublicAnytimerPage() {
 
   const alreadyResolved = info.status !== 'pending';
   const isReceiver = info.confirmerRole === 'receiver';
+  const countLabel = info.count > 1 ? `${info.count}x ` : '';
 
   return (
     <div className="max-w-md mx-auto px-4 py-16">
@@ -81,8 +84,8 @@ export default function PublicAnytimerPage() {
         <p className="text-3xl mb-3">🍺</p>
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
           {isReceiver
-            ? `${info.otherUserName} wil je een anytimer geven`
-            : `${info.otherUserName} zegt dat jij hem/haar een anytimer hebt gegeven`}
+            ? `${info.otherUserName} wil je ${countLabel}een anytimer geven`
+            : `${info.otherUserName} zegt dat jij hem/haar ${countLabel}een anytimer hebt gegeven`}
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm italic mb-6">&quot;{info.reason}&quot;</p>
 
@@ -109,14 +112,14 @@ export default function PublicAnytimerPage() {
                 className={`flex-1 border py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50
                   ${preferredAction === 'decline' ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
               >
-                {acting === 'decline' ? 'Bezig…' : isReceiver ? '❌ Weigeren' : '❌ Afwijzen'}
+                {acting === 'decline' ? 'Bezig…' : isReceiver ? (info.count > 1 ? '❌ Alles weigeren' : '❌ Weigeren') : (info.count > 1 ? '❌ Alles afwijzen' : '❌ Afwijzen')}
               </button>
               <button
                 onClick={() => act('accept')}
                 disabled={acting !== null}
                 className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
               >
-                {acting === 'accept' ? 'Bezig…' : isReceiver ? '✅ Accepteren' : '✅ Bevestigen'}
+                {acting === 'accept' ? 'Bezig…' : isReceiver ? (info.count > 1 ? '✅ Alles accepteren' : '✅ Accepteren') : (info.count > 1 ? '✅ Alles bevestigen' : '✅ Bevestigen')}
               </button>
             </div>
           </>

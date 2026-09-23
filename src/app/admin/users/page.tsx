@@ -35,21 +35,6 @@ export default function AdminUsersPage() {
     load();
   }
 
-  async function changeRole(id: number, role: string) {
-    await fetch(`/api/admin/users/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role }),
-    });
-    load();
-  }
-
-  async function deleteUser(id: number, username: string) {
-    if (!confirm(`Gebruiker "${username}" verwijderen? Dit verwijdert ook alle anytimers.`)) return;
-    await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-    load();
-  }
-
   if (loading) return <div className="p-8 text-center text-amber-600">Laden...</div>;
 
   return (
@@ -74,35 +59,21 @@ export default function AdminUsersPage() {
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
        <div className="overflow-x-auto">
         <div className="min-w-[560px]">
-        <div className="grid grid-cols-4 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <div className="grid grid-cols-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
           <div>Naam</div>
           <div>Email</div>
           <div>Rol</div>
-          <div className="text-right">Acties</div>
         </div>
         {users.map(u => (
-          <div key={u.id} className="grid grid-cols-4 px-4 py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center">
+          <Link
+            key={u.id}
+            href={`/admin/users/${u.id}`}
+            className="grid grid-cols-3 px-4 py-3 border-b border-gray-50 dark:border-gray-800 last:border-0 items-center hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+          >
             <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{u.username}</div>
             <div className="text-gray-500 dark:text-gray-400 text-sm truncate">{u.email}</div>
-            <div>
-              <select
-                value={u.role}
-                onChange={e => changeRole(u.id, e.target.value)}
-                className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:bg-gray-800 dark:text-gray-100"
-              >
-                <option value="user">Gebruiker</option>
-                <option value="admin">Super Admin</option>
-              </select>
-            </div>
-            <div className="flex justify-end">
-              <button
-                onClick={() => deleteUser(u.id, u.username)}
-                className="text-red-500 hover:text-red-700 text-xs font-medium transition-colors"
-              >
-                Verwijder
-              </button>
-            </div>
-          </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">{u.role === 'admin' ? 'Super Admin' : 'Gebruiker'}</div>
+          </Link>
         ))}
         </div>
        </div>
